@@ -30,6 +30,7 @@ jobs:
           CI: true
           FRONTEND_URL: http://localhost:5173/
           BACKEND_URL: http://localhost:5000/
+          VITE_BACKEND_URL: http://localhost:5000
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 

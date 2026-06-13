@@ -26,7 +26,7 @@ const MockTestHome = () => {
     try {
       setLoading(true);
 
-      const response = await fetch('http://10.141.95.184:5000/mocktests');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/mocktests`);
       const data = await response.json();
 
       if (data.success) {
@@ -46,7 +46,7 @@ const MockTestHome = () => {
     try {
       setResultsLoading(true);
 
-      const response = await fetch(`http://10.141.95.184:5000/test-results/${userId}`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/test-results/${userId}`);
       const data = await response.json();
 
       if (data.success) {

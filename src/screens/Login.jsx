@@ -36,8 +36,8 @@ const Login = () => {
     try {
       const url =
         authMode === 'login'
-          ? 'http://10.141.95.184:5000/login'
-          : 'http://10.141.95.184:5000/register';
+          ? `${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/login`
+          : `${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/register`;
 
       const body =
         authMode === 'login'

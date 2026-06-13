@@ -35,7 +35,7 @@ const App = () => {
     }
 
     // Backend test connection
-    fetch("http://10.141.95.184:5000/")
+    fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/`)
       .then(res => res.text())
       .then(data => console.log("Backend Response:", data))
       .catch(err => console.log("Backend Error:", err));

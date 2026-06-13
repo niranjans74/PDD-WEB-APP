@@ -21,7 +21,7 @@ const QuizInterface = () => {
 
   const fetchMockTest = async () => {
     try {
-      const response = await fetch(`http://10.141.95.184:5000/mocktests/${id}`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/mocktests/${id}`);
       const data = await response.json();
 
       if (data.success) {
@@ -106,7 +106,7 @@ const QuizInterface = () => {
     const result = calculateResult();
 
     try {
-      await fetch('http://10.141.95.184:5000/test-results', {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/test-results`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
