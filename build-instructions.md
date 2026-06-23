@@ -31,7 +31,7 @@ To start your backend server (now configured to listen on all interfaces `0.0.0.
 ```bash
 node server.cjs
 ```
-Your backend will now accept connections from `http://10.141.95.184:5000`.
+Your backend will now accept connections from `https://placement-companion-backend.onrender.com`.
 
 ## 5. Prepare Project for GitHub Push
 To push all components (frontend, backend, Android Capacitor project, Selenium tests, Appium tests) to your GitHub repository, ensure you are in the root directory `WebApp` and run the following Git commands:

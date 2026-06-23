@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import WebLayout from './components/WebLayout';
+import { API_BASE_URL } from './assets/api';
 
 // Screens
 import SetupWizard from './screens/SetupWizard';
@@ -34,7 +35,7 @@ const App = () => {
     }
 
     // Backend test connection
-    fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/`)
+    fetch(`${API_BASE_URL}/`)
       .then(res => res.text())
       .then(data => console.log("Backend Response:", data))
       .catch(err => console.log("Backend Error:", err));

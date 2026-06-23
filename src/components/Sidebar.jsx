@@ -13,8 +13,7 @@ const Sidebar = () => {
     { path: '/roadmap', icon: Briefcase, label: 'Roadmaps' },
     { path: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
     { path: '/career-tools', icon: Briefcase, label: 'Career Tools' },
-    { path: '/evergreen-jobs', icon: Target, label: 'Evergreen Jobs' },
-    { path: '/profile', icon: User, label: 'Profile' }
+    { path: '/evergreen-jobs', icon: Target, label: 'Evergreen Jobs' }
   ];
 
   return (

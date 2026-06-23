@@ -23,6 +23,16 @@ const userSchema = new mongoose.Schema({
     default: "student"
   },
 
+  phone: {
+    type: String,
+    default: ""
+  },
+
+  profilePic: {
+    type: String,
+    default: ""
+  },
+
   college: String,
   department: String,
   year: Number,

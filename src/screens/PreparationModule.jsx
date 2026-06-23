@@ -75,7 +75,8 @@ const PreparationModule = () => {
       color: '#3b82f6',
       progress: getCategoryProgress('aptitude'),
       time: '40 Hours',
-      jsonFile: '/data/aptitude.json'
+      jsonFile: '/data/aptitude.json',
+      zipFile: '/materials/aptitude-kit.zip'
     },
     {
       id: 'reasoning',
@@ -85,7 +86,8 @@ const PreparationModule = () => {
       color: '#8b5cf6',
       progress: getCategoryProgress('reasoning'),
       time: '30 Hours',
-      jsonFile: '/data/reasoning.json'
+      jsonFile: '/data/reasoning.json',
+      zipFile: '/materials/reasoning-kit.zip'
     },
     {
       id: 'verbal',
@@ -95,7 +97,8 @@ const PreparationModule = () => {
       color: '#ec4899',
       progress: getCategoryProgress('verbal'),
       time: '25 Hours',
-      jsonFile: '/data/verbal.json'
+      jsonFile: '/data/verbal.json',
+      zipFile: '/materials/verbal-kit.zip'
     },
     {
       id: 'core-subjects',
@@ -105,7 +108,8 @@ const PreparationModule = () => {
       color: '#10b981',
       progress: getCategoryProgress('core-subjects'),
       time: '50 Hours',
-      jsonFile: '/data/core-subjects.json'
+      jsonFile: '/data/core-subjects.json',
+      zipFile: '/materials/core-subjects-kit.zip'
     }
   ];
 
@@ -216,104 +220,52 @@ const PreparationModule = () => {
     </div>
   );
 
+  const handleDownloadKit = () => {
+    if (!activeCategory || !activeCategory.zipFile) return;
+    
+    const link = document.createElement('a');
+    link.href = activeCategory.zipFile;
+    link.setAttribute('download', `${activeCategory.id}-kit.zip`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setToastMessage(`Downloading ${activeCategory.title} Kit...`);
+    setTimeout(() => setToastMessage(''), 3000);
+    closeModal();
+  };
+
   const renderCompleteKitModal = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm flex flex-col overflow-hidden shadow-2xl p-6 text-center"
       >
-        <div className="flex justify-between items-center p-6 border-b border-slate-800" style={{ borderBottomColor: `${activeCategory.color}40` }}>
-          <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <span className="p-2 rounded-lg" style={{ backgroundColor: `${activeCategory.color}20`, color: activeCategory.color }}>
-                <activeCategory.icon size={24} />
-              </span>
-              {activeCategory.title} Complete Kit
-            </h2>
-          </div>
-          <button onClick={closeModal} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white">
-            <X size={24} />
-          </button>
+        <div className="mx-auto mb-4 p-4 rounded-full" style={{ backgroundColor: `${activeCategory.color}20`, color: activeCategory.color }}>
+          <activeCategory.icon size={48} />
         </div>
-
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Left Column: Roadmap & Plan */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <Target className="text-blue-400" size={20} /> Recommended Roadmap
-                </h3>
-                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-600 before:to-transparent">
-                  {[1, 2, 3, 4].map((step) => (
-                    <div key={step} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-slate-700 text-slate-400 group-[.is-active]:bg-blue-500 group-[.is-active]:text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                        {step}
-                      </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-700 bg-slate-800/80 shadow">
-                        <h4 className="font-bold text-white">Phase {step}: Fundamentals</h4>
-                        <p className="text-sm text-slate-400 mt-1">Complete basics and core theory. Solve 50+ basic problems.</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Resources */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-xl p-6 border border-slate-700 shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <activeCategory.icon size={100} />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-4 relative z-10">Premium Resources</h3>
-                <div className="space-y-3 relative z-10">
-                  <button className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-900 transition-all group">
-                    <span className="flex items-center gap-3 text-slate-300 group-hover:text-white">
-                      <FileText className="text-blue-400" size={18} /> Formula Cheat Sheet
-                    </span>
-                    <ChevronRight size={16} className="text-slate-500" />
-                  </button>
-                  <button className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-900 transition-all group">
-                    <span className="flex items-center gap-3 text-slate-300 group-hover:text-white">
-                      <PlayCircle className="text-purple-400" size={18} /> Shortcut Tricks Video
-                    </span>
-                    <ChevronRight size={16} className="text-slate-500" />
-                  </button>
-                  <button className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700 hover:border-green-500/50 hover:bg-slate-900 transition-all group">
-                    <span className="flex items-center gap-3 text-slate-300 group-hover:text-white">
-                      <Target className="text-green-400" size={18} /> 30-Day Study Plan
-                    </span>
-                    <ChevronRight size={16} className="text-slate-500" />
-                  </button>
-                  <button className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700 hover:border-orange-500/50 hover:bg-slate-900 transition-all group opacity-75">
-                    <span className="flex items-center gap-3 text-slate-400">
-                      <Lock className="text-slate-500" size={18} /> Company Patterns
-                    </span>
-                    <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400">Pro</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-lg font-bold text-white mb-2">Daily Checklist</h3>
-                <p className="text-sm text-slate-400 mb-4">Complete these tasks today to maintain your streak.</p>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 bg-slate-800" />
-                    <span className="text-sm font-medium text-slate-300">Read 1 Concept Guide</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 bg-slate-800" />
-                    <span className="text-sm font-medium text-slate-300">Revise Formula Sheet</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <h2 className="text-2xl font-bold text-white mb-2">Download Complete Kit</h2>
+        <p className="text-slate-400 mb-6">
+          Are you sure you want to download the complete {activeCategory.title} study material kit?
+        </p>
+        
+        <div className="flex gap-3 mt-2">
+          <button 
+            onClick={closeModal}
+            className="flex-1 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors border border-slate-700"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleDownloadKit}
+            className="flex-1 py-2.5 px-4 rounded-xl text-white font-semibold transition-all shadow-lg border border-transparent hover:brightness-110"
+            style={{ backgroundColor: activeCategory.color, boxShadow: `0 4px 14px 0 ${activeCategory.color}40` }}
+          >
+            Download
+          </button>
         </div>
       </motion.div>
     </div>

@@ -15,6 +15,7 @@ import {
   FileText,
   ClipboardList
 } from 'lucide-react';
+import { API_BASE_URL } from '../assets/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ const AdminDashboard = () => {
 
   const fetchDashboard = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/dashboard`);
+      const res = await fetch(`${API_BASE_URL}/dashboard`);
       const data = await res.json();
       if (data.success) setDashboard(data.data);
     } catch (error) {
@@ -69,7 +70,7 @@ const AdminDashboard = () => {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/applications`);
+      const res = await fetch(`${API_BASE_URL}/applications`);
       const data = await res.json();
       if (data.success) setApplications(data.data);
     } catch (error) {
@@ -79,7 +80,7 @@ const AdminDashboard = () => {
 
   const fetchResources = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/resources`);
+      const res = await fetch(`${API_BASE_URL}/resources`);
       const data = await res.json();
       if (data.success) setResources(data.data);
     } catch (error) {
@@ -89,7 +90,7 @@ const AdminDashboard = () => {
 
   const fetchQuestions = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/questions`);
+      const res = await fetch(`${API_BASE_URL}/questions`);
       const data = await res.json();
       if (data.success) setQuestions(data.data);
     } catch (error) {
@@ -99,7 +100,7 @@ const AdminDashboard = () => {
 
   const fetchMockTests = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/mocktests`);
+      const res = await fetch(`${API_BASE_URL}/mocktests`);
       const data = await res.json();
       if (data.success) setMockTests(data.data);
     } catch (error) {
@@ -125,7 +126,7 @@ const AdminDashboard = () => {
     };
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/questions`, {
+      const res = await fetch(`${API_BASE_URL}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -162,7 +163,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Delete this question?')) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/questions/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/questions/${id}`, {
         method: 'DELETE'
       });
 
@@ -212,7 +213,7 @@ const AdminDashboard = () => {
     };
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/mocktests`, {
+      const res = await fetch(`${API_BASE_URL}/mocktests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, UserPlus, LogIn } from 'lucide-react';
+import { API_BASE_URL } from '../assets/api';
 
 // Temporary flag for testing APK without login
 const SKIP_LOGIN = false;
@@ -29,6 +30,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('student');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,11 +41,12 @@ const Login = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const url =
         authMode === 'login'
-          ? `${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/login`
-          : `${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/register`;
+          ? `${API_BASE_URL}/login`
+          : `${API_BASE_URL}/register`;
 
       const body =
         authMode === 'login'
@@ -89,6 +92,8 @@ const Login = () => {
         localStorage.setItem('userName', data.data.name);
         localStorage.setItem('email', data.data.email);
         localStorage.setItem('role', data.role);
+        if (data.data.phone) localStorage.setItem('phone', data.data.phone);
+        if (data.data.profilePic) localStorage.setItem('profilePic', data.data.profilePic);
 
         if (data.role === 'admin') {
           navigate('/admin');
@@ -111,7 +116,9 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Backend is not running. Start node server.cjs first.');
+      alert('Network error. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -207,8 +214,13 @@ const Login = () => {
             </div>
           )}
 
-          <button type="submit" className="btn-primary w-full py-3 mt-4 flex justify-center items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors">
-            {authMode === 'login' ? (
+          <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 mt-4 flex justify-center items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+            {isLoading ? (
+              <>
+                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                Please wait...
+              </>
+            ) : authMode === 'login' ? (
               <>
                 <LogIn size={20} /> Login
               </>

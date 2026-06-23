@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Settings, Shield, Building, LogOut, Edit3, Bell, X } from 'lucide-react';
+import { API_BASE_URL } from '../assets/api';
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -42,6 +43,9 @@ const UserProfile = () => {
   const [tempEmail, setTempEmail] = useState(email);
   const [tempPhone, setTempPhone] = useState(phone);
   
+  const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  
   // OTP Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -77,11 +81,24 @@ const UserProfile = () => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result;
         setProfilePic(base64String);
         localStorage.setItem('profilePic', base64String);
         window.dispatchEvent(new Event('profilePicUpdated'));
+        
+        try {
+          const u = JSON.parse(localStorage.getItem('user'));
+          if (u && u._id) {
+            await fetch(`${API_BASE_URL}/users/${u._id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ profilePic: base64String })
+            });
+          }
+        } catch(err) {
+          console.error("Failed to sync profile pic", err);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -97,7 +114,25 @@ const UserProfile = () => {
       localStorage.setItem('firstName', tempFirstName);
       localStorage.setItem('lastName', tempLastName);
       window.dispatchEvent(new Event('profilePicUpdated'));
-      alert('Profile updated successfully!');
+      
+      const u = JSON.parse(localStorage.getItem('user'));
+      if (u && u._id) {
+        setIsSaving(true);
+        fetch(`${API_BASE_URL}/users/${u._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: `${tempFirstName} ${tempLastName}`.trim() })
+        }).then(() => {
+          alert('Profile updated successfully!');
+        }).catch(err => {
+          console.error(err);
+          alert('Profile updated locally, but failed to sync.');
+        }).finally(() => {
+          setIsSaving(false);
+        });
+      } else {
+        alert('Profile updated successfully!');
+      }
     }
   };
 
@@ -115,9 +150,34 @@ const UserProfile = () => {
       localStorage.setItem('phone', tempPhone);
       window.dispatchEvent(new Event('profilePicUpdated'));
 
-      setShowOtpModal(false);
-      setOtp(['', '', '', '']);
-      alert('Profile details updated successfully!');
+      const u = JSON.parse(localStorage.getItem('user'));
+      if (u && u._id) {
+        setIsVerifying(true);
+        fetch(`${API_BASE_URL}/users/${u._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${tempFirstName} ${tempLastName}`.trim(),
+            email: tempEmail,
+            phone: tempPhone
+          })
+        }).then(() => {
+          setShowOtpModal(false);
+          setOtp(['', '', '', '']);
+          alert('Profile details updated successfully!');
+        }).catch(err => {
+          console.error(err);
+          setShowOtpModal(false);
+          setOtp(['', '', '', '']);
+          alert('Profile updated locally, but failed to sync.');
+        }).finally(() => {
+          setIsVerifying(false);
+        });
+      } else {
+        setShowOtpModal(false);
+        setOtp(['', '', '', '']);
+        alert('Profile details updated successfully!');
+      }
     } else {
       alert('Please enter a 4-digit OTP.');
     }
@@ -249,7 +309,11 @@ const UserProfile = () => {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">
-                  <button className="btn-primary" onClick={handlePersonalSave}>Save Changes</button>
+                  <button className="btn-primary flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" onClick={handlePersonalSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> Saving...</>
+                    ) : 'Save Changes'}
+                  </button>
                 </div>
               </div>
             )}
@@ -441,8 +505,10 @@ const UserProfile = () => {
               ))}
             </div>
             
-            <button className="btn-primary w-full" onClick={handleOtpVerify}>
-              Verify & Save
+            <button className="btn-primary w-full flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" onClick={handleOtpVerify} disabled={isVerifying}>
+              {isVerifying ? (
+                <><span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span> Verifying...</>
+              ) : 'Verify & Save'}
             </button>
           </div>
         </div>

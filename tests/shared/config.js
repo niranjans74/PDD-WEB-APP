@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
     web: {
         baseUrl: process.env.FRONTEND_URL || 'http://localhost:5173/',
-        backendUrl: process.env.BACKEND_URL || 'http://10.141.95.184:5000/',
+        backendUrl: process.env.BACKEND_URL || 'https://placement-companion-backend.onrender.com/',
         browser: 'chrome',
         timeout: 10000,
     },

@@ -24,9 +24,9 @@ const ATSChecker = () => {
     setTimeout(() => {
       setIsScanning(false);
       
-      // Generate a dynamic score based on the length of the job role and filename
-      const hash = (jobRole.length * 7 + file.name.length * 3) % 40;
-      const calculatedScore = 55 + hash; // Score between 55 and 94
+      // Generate a more dynamic score
+      const randomFactor = Math.floor(Math.random() * 20); // 0 to 19
+      const calculatedScore = Math.min(96, 60 + (jobRole.length % 10) + randomFactor);
 
       // Dynamic keywords based on role
       const lowerRole = jobRole.toLowerCase();
@@ -58,7 +58,7 @@ const ATSChecker = () => {
   };
 
   return (
-    <div className="page-container h-full flex flex-col relative overflow-hidden bg-background">
+    <div className="page-container min-h-full flex flex-col relative overflow-y-auto custom-scrollbar bg-background">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
@@ -118,8 +118,8 @@ const ATSChecker = () => {
           <button 
             onClick={handleScan}
             disabled={!file || !jobRole || isScanning}
-            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${
-              !file || !jobRole ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-hover shadow-lg shadow-primary/30'
+            className={`w-full py-4 mt-auto rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 ${
+              !file || !jobRole ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'bg-primary text-white hover:bg-primary/90 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transform hover:-translate-y-1'
             }`}
           >
             {isScanning ? (
@@ -136,8 +136,7 @@ const ATSChecker = () => {
           </button>
         </div>
 
-        {/* Right Side: Results */}
-        <div className="card relative overflow-hidden flex flex-col">
+        <div className="card relative overflow-y-auto custom-scrollbar flex flex-col min-h-[400px]">
           {!results && !isScanning ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50">
               <div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center mb-6">

@@ -152,9 +152,8 @@ const HomeDashboard = () => {
           
           {/* Readiness Score Card */}
           <div 
-            className="card bg-slate-800/50 p-6 flex flex-col md:flex-row items-center gap-8 border-l-4 border-l-primary cursor-pointer hover:shadow-lg transition-shadow" 
+            className="card bg-slate-800/50 p-6 flex flex-col md:flex-row items-center gap-8 border-l-4 border-l-primary transition-shadow" 
             style={{ borderLeftColor: 'var(--primary-color)' }}
-            onClick={() => navigate('/performance')}
           >
             <div className="relative w-32 h-32 flex-shrink-0">
               <svg viewBox="0 0 36 36" className="w-full h-full">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Code2, AlertCircle, Building2 } from 'lucide-react';
+import { CheckCircle, Code2, AlertCircle, Building2, Bookmark } from 'lucide-react';
 
 export const companiesData = [
   {
@@ -117,6 +117,18 @@ const CodingDashboard = () => {
   const [filteredCompaniesData, setFilteredCompaniesData] = useState(companiesData);
   const [activeCompanyObj, setActiveCompanyObj] = useState(companiesData[0]);
   const [completedTopics, setCompletedTopics] = useState({});
+  const [bookmarkedTopics, setBookmarkedTopics] = useState(() => {
+    const saved = localStorage.getItem('bookmarkedTopics');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const toggleBookmark = (topicId, e) => {
+    e.stopPropagation();
+    const newStatus = !bookmarkedTopics[topicId];
+    const updated = { ...bookmarkedTopics, [topicId]: newStatus };
+    setBookmarkedTopics(updated);
+    localStorage.setItem('bookmarkedTopics', JSON.stringify(updated));
+  };
 
   useEffect(() => {
     const loadTargets = () => {
@@ -190,8 +202,8 @@ const CodingDashboard = () => {
     return (
       <div className="page-container">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-textMain mb-2">Company-Wise Topics Preparation</h1>
-          <p className="text-secondary text-lg">Track your preparation progress for specific target companies.</p>
+          <h1 className="text-3xl font-bold text-textMain mb-2">Topics Preparation</h1>
+          <p className="text-secondary text-lg">Track your preparation progress for your targeted topics.</p>
         </div>
         <div className="card text-center py-16 flex flex-col items-center border-dashed border-2 border-slate-700 bg-transparent">
           <Building2 size={64} className="text-slate-600 mb-6" />
@@ -204,49 +216,14 @@ const CodingDashboard = () => {
 
   return (
     <div className="page-container">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-textMain mb-2">Company-Wise Topics Preparation</h1>
-        <p className="text-secondary text-lg">Track your preparation progress for specific target companies.</p>
-      </div>
-
-      {/* Company Selector */}
-      <div className="mb-8">
-        <div className="flex gap-3 w-full overflow-x-auto hide-scrollbar pb-2">
-          {filteredCompaniesData.map(company => (
-            <button 
-              key={company.name}
-              className={`px-4 py-3 rounded-xl font-bold flex items-center gap-3 transition-all flex-shrink-0 ${
-                activeCompanyObj.name === company.name 
-                ? 'bg-primary text-white shadow-[0_0_15px_rgba(192,38,211,0.4)] transform -translate-y-1' 
-                : 'bg-slate-800 text-secondary hover:bg-slate-700'
-              }`}
-              onClick={() => setActiveCompanyObj(company)}
-            >
-              <Building2 size={18} />
-              {company.name}
-            </button>
-          ))}
+      <div className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-textMain mb-2">Topics Preparation</h1>
+          <p className="text-secondary text-lg">Track your preparation progress for your targeted topics.</p>
         </div>
-      </div>
-
-      <div className="card mb-8 flex justify-between items-center bg-gradient-to-r from-slate-900 to-slate-800 border-l-4 border-l-primary">
-        <div className="flex items-center gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-white mb-1">Target: {activeCompanyObj.name}</h2>
-            <p className="text-sm text-secondary">Complete all topics to secure your readiness for {activeCompanyObj.name}'s assessment rounds.</p>
-          </div>
-        </div>
-        <div className="text-right flex items-center gap-4">
-          <div className="hidden sm:block text-right">
-            <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Completion</span>
-            <span className="text-2xl font-bold text-primary">{calculateProgress()}%</span>
-          </div>
-          <div className="w-16 h-16 rounded-full border-4 border-slate-700 flex items-center justify-center relative">
-            <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full transform -rotate-90">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--primary-color)" strokeWidth="4" strokeDasharray={`${calculateProgress()}, 100`} />
-            </svg>
-            <Code2 size={20} className="text-secondary" />
-          </div>
+        <div className="text-right hidden sm:block">
+          <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Completion</span>
+          <span className="text-2xl font-bold text-primary">{calculateProgress()}%</span>
         </div>
       </div>
 
@@ -267,12 +244,20 @@ const CodingDashboard = () => {
               }`}
               onClick={() => toggleTopic(topic.id)}
             >
-              <span className={`font-semibold ${completedTopics[topic.id] ? 'text-green-400' : 'text-textMain'}`}>{topic.name}</span>
-              <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
-                completedTopics[topic.id] ? 'bg-green-500 border-green-500 text-white' : 'border-slate-500 text-transparent'
-              }`}>
-                <CheckCircle size={14} />
-              </button>
+              <span className={`font-semibold flex-1 pr-2 ${completedTopics[topic.id] ? 'text-green-400' : 'text-textMain'}`}>{topic.name}</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => toggleBookmark(topic.id, e)}
+                  className={`p-1 rounded transition-colors ${bookmarkedTopics[topic.id] ? 'text-primary' : 'text-slate-500 hover:text-white'}`}
+                >
+                  <Bookmark size={18} fill={bookmarkedTopics[topic.id] ? 'currentColor' : 'none'} />
+                </button>
+                <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+                  completedTopics[topic.id] ? 'bg-green-500 border-green-500 text-white' : 'border-slate-500 text-transparent'
+                }`}>
+                  <CheckCircle size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -291,12 +276,20 @@ const CodingDashboard = () => {
               }`}
               onClick={() => toggleTopic(topic.id)}
             >
-              <span className={`font-semibold ${completedTopics[topic.id] ? 'text-yellow-400' : 'text-textMain'}`}>{topic.name}</span>
-              <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
-                completedTopics[topic.id] ? 'bg-yellow-500 border-yellow-500 text-white' : 'border-slate-500 text-transparent'
-              }`}>
-                <CheckCircle size={14} />
-              </button>
+              <span className={`font-semibold flex-1 pr-2 ${completedTopics[topic.id] ? 'text-yellow-400' : 'text-textMain'}`}>{topic.name}</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => toggleBookmark(topic.id, e)}
+                  className={`p-1 rounded transition-colors ${bookmarkedTopics[topic.id] ? 'text-primary' : 'text-slate-500 hover:text-white'}`}
+                >
+                  <Bookmark size={18} fill={bookmarkedTopics[topic.id] ? 'currentColor' : 'none'} />
+                </button>
+                <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+                  completedTopics[topic.id] ? 'bg-yellow-500 border-yellow-500 text-white' : 'border-slate-500 text-transparent'
+                }`}>
+                  <CheckCircle size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -315,12 +308,20 @@ const CodingDashboard = () => {
               }`}
               onClick={() => toggleTopic(topic.id)}
             >
-              <span className={`font-semibold ${completedTopics[topic.id] ? 'text-red-400' : 'text-textMain'}`}>{topic.name}</span>
-              <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
-                completedTopics[topic.id] ? 'bg-red-500 border-red-500 text-white' : 'border-slate-500 text-transparent'
-              }`}>
-                <CheckCircle size={14} />
-              </button>
+              <span className={`font-semibold flex-1 pr-2 ${completedTopics[topic.id] ? 'text-red-400' : 'text-textMain'}`}>{topic.name}</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => toggleBookmark(topic.id, e)}
+                  className={`p-1 rounded transition-colors ${bookmarkedTopics[topic.id] ? 'text-primary' : 'text-slate-500 hover:text-white'}`}
+                >
+                  <Bookmark size={18} fill={bookmarkedTopics[topic.id] ? 'currentColor' : 'none'} />
+                </button>
+                <button className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+                  completedTopics[topic.id] ? 'bg-red-500 border-red-500 text-white' : 'border-slate-500 text-transparent'
+                }`}>
+                  <CheckCircle size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

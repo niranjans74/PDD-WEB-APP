@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, AlertTriangle, CheckCircle, XCircle, ArrowRight, Home } from 'lucide-react';
+import { API_BASE_URL } from '../assets/api';
 
 const QuizInterface = () => {
   const { id } = useParams();
@@ -21,7 +22,7 @@ const QuizInterface = () => {
 
   const fetchMockTest = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/mocktests/${id}`);
+      const response = await fetch(`${API_BASE_URL}/mocktests/${id}`);
       const data = await response.json();
 
       if (data.success) {
@@ -106,7 +107,7 @@ const QuizInterface = () => {
     const result = calculateResult();
 
     try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://10.141.95.184:5000'}/test-results`, {
+      await fetch(`${API_BASE_URL}/test-results`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
