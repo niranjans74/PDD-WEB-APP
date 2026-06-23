@@ -75,8 +75,8 @@ const PreparationModule = () => {
       color: '#3b82f6',
       progress: getCategoryProgress('aptitude'),
       time: '40 Hours',
-      jsonFile: '/data/aptitude.json',
-      zipFile: '/materials/aptitude-kit.zip'
+      jsonFile: `${import.meta.env.BASE_URL}data/aptitude.json`,
+      zipFile: `${import.meta.env.BASE_URL}materials/aptitude-kit.zip`
     },
     {
       id: 'reasoning',
@@ -86,8 +86,8 @@ const PreparationModule = () => {
       color: '#8b5cf6',
       progress: getCategoryProgress('reasoning'),
       time: '30 Hours',
-      jsonFile: '/data/reasoning.json',
-      zipFile: '/materials/reasoning-kit.zip'
+      jsonFile: `${import.meta.env.BASE_URL}data/reasoning.json`,
+      zipFile: `${import.meta.env.BASE_URL}materials/reasoning-kit.zip`
     },
     {
       id: 'verbal',
@@ -97,8 +97,8 @@ const PreparationModule = () => {
       color: '#ec4899',
       progress: getCategoryProgress('verbal'),
       time: '25 Hours',
-      jsonFile: '/data/verbal.json',
-      zipFile: '/materials/verbal-kit.zip'
+      jsonFile: `${import.meta.env.BASE_URL}data/verbal.json`,
+      zipFile: `${import.meta.env.BASE_URL}materials/verbal-kit.zip`
     },
     {
       id: 'core-subjects',
@@ -108,8 +108,8 @@ const PreparationModule = () => {
       color: '#10b981',
       progress: getCategoryProgress('core-subjects'),
       time: '50 Hours',
-      jsonFile: '/data/core-subjects.json',
-      zipFile: '/materials/core-subjects-kit.zip'
+      jsonFile: `${import.meta.env.BASE_URL}data/core-subjects.json`,
+      zipFile: `${import.meta.env.BASE_URL}materials/core-subjects-kit.zip`
     }
   ];
 
