@@ -70,6 +70,20 @@ const PreparationModule = () => {
     };
   }, []);
 
+  // Calculate category progress from completed topics
+  const getCategoryProgress = (categoryId) => {
+    try {
+      const stored = localStorage.getItem('prepCompleted');
+      const completed = stored ? JSON.parse(stored) : {};
+      const keys = Object.keys(completed).filter(k => k.startsWith(categoryId) || k.includes(categoryId));
+      if (keys.length === 0) return 0;
+      const completedCount = keys.filter(k => completed[k]).length;
+      return Math.round((completedCount / keys.length) * 100);
+    } catch {
+      return 0;
+    }
+  };
+
   const toggleComplete = async (topic, e) => {
     e.stopPropagation();
     const newStatus = !completedTopics[topic.id];
