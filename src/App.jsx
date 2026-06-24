@@ -41,7 +41,7 @@ const App = () => {
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.DEV ? '/' : '/placement-companion-web'}>
       <Routes>
         {/* Onboarding & Login Flow */}
         <Route path="/login" element={<Login />} />
