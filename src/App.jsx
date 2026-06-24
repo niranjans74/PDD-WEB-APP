@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import WebLayout from './components/WebLayout';
 import { API_BASE_URL } from './assets/api';
 
@@ -41,7 +41,7 @@ const App = () => {
   }, []);
 
   return (
-    <BrowserRouter basename={import.meta.env.DEV ? '/' : '/placement-companion-web'}>
+    <HashRouter>
       <Routes>
         {/* Onboarding & Login Flow */}
         <Route path="/login" element={<Login />} />
@@ -70,7 +70,7 @@ const App = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
