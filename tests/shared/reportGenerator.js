@@ -2,6 +2,7 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
+const { execSync } = require('child_process');
 
 class ReportGenerator {
     constructor(reportName = 'combined-test-report.xlsx') {
@@ -93,6 +94,17 @@ class ReportGenerator {
         };
         fs.writeFileSync(this.summaryPath, JSON.stringify(summary, null, 2));
         logger.info(`JSON Summary generated at: ${this.summaryPath}`);
+        
+        // Auto-run testing compiler to update the testing/ reports
+        try {
+            const compilerPath = path.join(__dirname, '../../testing/generate_reports.cjs');
+            if (fs.existsSync(compilerPath)) {
+                logger.info('Auto-updating testing reports inside testing/ directory...');
+                execSync(`node "${compilerPath}"`, { stdio: 'inherit' });
+            }
+        } catch (err) {
+            logger.error(`Failed to auto-update testing reports: ${err.message}`);
+        }
     }
 }
 

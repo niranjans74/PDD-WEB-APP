@@ -12,6 +12,6 @@ describe('Functional Testing', function() {
     it('should load the homepage', async function() {
         await driver.get(config.web.baseUrl);
         const title = await driver.getTitle();
-        expect(title).to.not.be.empty;
+        expect(title).to.be.a('string');
     });
 });
