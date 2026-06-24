@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, Brain, Terminal, MessageCircle, X, ChevronRight, 
@@ -9,6 +10,7 @@ import { API_BASE_URL, syncFetch } from '../assets/api';
 import { connectSocket, subscribeToEvent } from '../services/socket';
 
 const PreparationModule = () => {
+  const navigate = useNavigate();
   // States
   const [showExploreTopics, setShowExploreTopics] = useState(false);
   const [showCompleteKit, setShowCompleteKit] = useState(false);
@@ -16,7 +18,14 @@ const PreparationModule = () => {
   const [topicsData, setTopicsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarks, setBookmarks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bookmarks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [completedTopics, setCompletedTopics] = useState({});
   const [toastMessage, setToastMessage] = useState('');
 
@@ -26,7 +35,13 @@ const PreparationModule = () => {
 
     const fetchSyncData = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        try {
+          const loadedBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+          setBookmarks(loadedBookmarks);
+        } catch (e) {}
+        return;
+      }
       try {
         const res = await syncFetch(`${API_BASE_URL}/api/sync/all`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -44,6 +59,10 @@ const PreparationModule = () => {
         }
       } catch (err) {
         console.error('Error loading prep module sync data:', err);
+        try {
+          const loadedBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+          setBookmarks(loadedBookmarks);
+        } catch (e) {}
       }
     };
     fetchSyncData();
@@ -266,6 +285,7 @@ const PreparationModule = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   key={topic.id} 
+                  onClick={() => navigate(`/topic/${topic.id}`)}
                   className="bg-slate-800/50 border border-slate-700 hover:border-slate-500 rounded-xl p-5 transition-all hover:shadow-lg group cursor-pointer"
                 >
                   <div className="flex justify-between items-start mb-3">
@@ -306,56 +326,72 @@ const PreparationModule = () => {
   const handleDownloadKit = async () => {
     if (!activeCategory || !activeCategory.zipFile) return;
     
-    setToastMessage(`Downloading ${activeCategory.title} Kit...`);
+    const categoryId = activeCategory.id;
+    const categoryTitle = activeCategory.title;
+    
+    setToastMessage(`Downloading ${categoryTitle} Kit...`);
 
     try {
+      // Determine the absolute file URL
+      let fileUrl = activeCategory.zipFile;
+      if (!fileUrl.startsWith('http')) {
+        let cleanPath = activeCategory.zipFile;
+        if (cleanPath.startsWith('./')) {
+          cleanPath = cleanPath.slice(1); // slice off '.' to keep '/materials/...'
+        }
+        if (!cleanPath.startsWith('/')) {
+          cleanPath = '/' + cleanPath;
+        }
+        fileUrl = window.location.origin + cleanPath;
+      }
+
       // Check if running in Capacitor Native environment
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         const { Filesystem, Directory } = await import('@capacitor/filesystem');
         
-        // Ensure relative paths from public are treated as absolute URLs for fetching
-        const fileUrl = activeCategory.zipFile.startsWith('http') 
-          ? activeCategory.zipFile 
-          : window.location.origin + activeCategory.zipFile;
-
         // Fetch the file to get its content as blob
         const response = await fetch(fileUrl);
         const blob = await response.blob();
         
-        // Convert blob to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-          const base64data = reader.result.split(',')[1]; // Remove data URL prefix
-          
-          try {
-            await Filesystem.writeFile({
-              path: `Download/${activeCategory.id}-kit.zip`,
-              data: base64data,
-              directory: Directory.ExternalStorage, // usually /storage/emulated/0
-            });
-            setToastMessage(`${activeCategory.title} Kit saved to Downloads!`);
-          } catch (writeErr) {
-            console.error('Filesystem write error:', writeErr);
-            // Fallback for newer Android where ExternalStorage requires scoped storage
-            await Filesystem.writeFile({
-              path: `${activeCategory.id}-kit.zip`,
-              data: base64data,
-              directory: Directory.Documents,
-            });
-            setToastMessage(`${activeCategory.title} Kit saved to Documents!`);
-          }
-        };
+        // Convert blob to base64 with a promise to avoid race condition
+        const base64data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = () => {
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = (e) => reject(e);
+        });
+        
+        try {
+          await Filesystem.writeFile({
+            path: `Download/${categoryId}-kit.zip`,
+            data: base64data,
+            directory: Directory.ExternalStorage, // usually /storage/emulated/0
+          });
+          setToastMessage(`${categoryTitle} Kit saved to Downloads!`);
+        } catch (writeErr) {
+          console.error('Filesystem write error to ExternalStorage, trying Documents:', writeErr);
+          // Fallback to Documents
+          await Filesystem.writeFile({
+            path: `${categoryId}-kit.zip`,
+            data: base64data,
+            directory: Directory.Documents,
+          });
+          setToastMessage(`${categoryTitle} Kit saved to Documents!`);
+        }
       } else {
         // Standard Web Download
         const link = document.createElement('a');
-        link.href = activeCategory.zipFile;
-        link.setAttribute('download', `${activeCategory.id}-kit.zip`);
+        link.href = fileUrl;
+        link.setAttribute('download', `${categoryId}-kit.zip`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setTimeout(() => setToastMessage(''), 3000);
+        setToastMessage(`${categoryTitle} Kit download started!`);
       }
+      setTimeout(() => setToastMessage(''), 3000);
     } catch (error) {
       console.error("Download failed:", error);
       setToastMessage("Failed to download kit. Please try again.");

@@ -86,25 +86,22 @@ const Bookmarks = () => {
     }
   };
 
-  // 1. Filter by category tab
-  const categoryFiltered = savedBookmarks.filter(bookmark => {
+  // Filter bookmarks by category or search query
+  const finalFiltered = savedBookmarks.filter(bookmark => {
+    const query = searchQuery.toLowerCase().trim();
+    if (query) {
+      // Show matches across all categories if user is searching
+      return (
+        (bookmark.title && bookmark.title.toLowerCase().includes(query)) ||
+        (bookmark.category && bookmark.category.toLowerCase().includes(query))
+      );
+    }
+    // Otherwise, filter by category tab
     if (activeCategoryTab === 'Aptitude') {
-      // Aptitude tab includes Aptitude, Logical Reasoning, Verbal Ability, Core Subjects (anything except Coding Prep)
       return bookmark.category !== 'Coding Prep';
     } else {
-      // Topics tab includes only Coding Prep
       return bookmark.category === 'Coding Prep';
     }
-  });
-
-  // 2. Filter by search query (match title or category)
-  const finalFiltered = categoryFiltered.filter(bookmark => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
-    return (
-      (bookmark.title && bookmark.title.toLowerCase().includes(query)) ||
-      (bookmark.category && bookmark.category.toLowerCase().includes(query))
-    );
   });
 
   return (
@@ -148,7 +145,7 @@ const Bookmarks = () => {
               placeholder="Search bookmarks..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-input pl-10 h-full py-2 bg-slate-800/50 w-full" 
+              className="form-input pl-10 bg-slate-800/50 w-full" 
             />
           </div>
         </div>

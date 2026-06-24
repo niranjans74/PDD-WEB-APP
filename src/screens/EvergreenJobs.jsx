@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, ArrowRight, ChevronRight, Briefcase, Code, Brain, Shield, Cloud, Database, Cpu, PenTool, Zap, Activity } from 'lucide-react';
+import { Target, ArrowRight, ArrowLeft, ChevronRight, Briefcase, Code, Brain, Shield, Cloud, Database, Cpu, PenTool, Zap, Activity } from 'lucide-react';
 
 const evergreenJobs = [
   {
@@ -96,6 +96,7 @@ const evergreenJobs = [
 
 const EvergreenJobs = () => {
   const [selectedJob, setSelectedJob] = useState(evergreenJobs[0]);
+  const [mobileView, setMobileView] = useState('list'); // 'list' or 'roadmap'
 
   return (
     <div className="page-container">
@@ -104,10 +105,20 @@ const EvergreenJobs = () => {
         <p className="text-secondary text-lg">Explore high-demand careers and their definitive step-by-step roadmaps.</p>
       </div>
 
+      {/* Back button visible only on mobile when viewing details */}
+      {mobileView === 'roadmap' && (
+        <button 
+          className="lg:hidden flex items-center gap-2 text-primary hover:text-primary/80 mb-6 font-semibold transition-colors"
+          onClick={() => setMobileView('list')}
+        >
+          <ArrowLeft size={20} /> Back to Careers
+        </button>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-8">
         
         {/* Left Side: Job List */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-3">
+        <div className={`w-full lg:w-1/3 flex flex-col gap-3 ${mobileView === 'roadmap' ? 'hidden lg:flex' : 'flex'}`}>
           {evergreenJobs.map((job, idx) => {
             const Icon = job.icon;
             const isActive = selectedJob.title === job.title;
@@ -119,7 +130,10 @@ const EvergreenJobs = () => {
                   ? 'bg-slate-800 border-primary shadow-lg shadow-primary/10' 
                   : 'bg-slate-800/30 border-slate-700/50 hover:bg-slate-800/80 hover:border-slate-600'
                 }`}
-                onClick={() => setSelectedJob(job)}
+                onClick={() => {
+                  setSelectedJob(job);
+                  setMobileView('roadmap');
+                }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${job.color}20`, color: job.color }}>
@@ -129,15 +143,15 @@ const EvergreenJobs = () => {
                     {job.title}
                   </span>
                 </div>
-                {isActive && <ChevronRight size={20} className="text-primary" />}
+                <ChevronRight size={20} className={isActive ? 'text-primary' : 'text-secondary'} />
               </button>
             );
           })}
         </div>
 
         {/* Right Side: Roadmap Visualization */}
-        <div className="w-full lg:w-2/3">
-          <div className="card sticky top-20 border-t-4 border-slate-700" style={{ borderTopColor: selectedJob.color }}>
+        <div className={`w-full lg:w-2/3 ${mobileView === 'list' ? 'hidden lg:block' : 'block'}`}>
+          <div className="card border-t-4 border-slate-700" style={{ borderTopColor: selectedJob.color }}>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-16 h-16 rounded-xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${selectedJob.color}20`, color: selectedJob.color }}>
                 <selectedJob.icon size={32} />

@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/PDD-WEB-APP/dev-sw.js?dev-sw', { scope: '/PDD-WEB-APP/', type: 'classic' })

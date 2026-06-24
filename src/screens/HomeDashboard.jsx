@@ -370,15 +370,15 @@ const HomeDashboard = () => {
             </div>
             <div className="flex flex-col gap-3">
               {dailyTasks.map(task => (
-                <div key={task.id} className={`p-4 border rounded-xl flex items-center justify-between gap-4 transition-colors ${task.completed ? 'bg-slate-800/80 opacity-60' : 'hover:border-primary'}`}>
+                <div key={task.id} className={`p-4 border border-slate-800/80 bg-slate-900/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${task.completed ? 'bg-slate-900/10 opacity-50 border-slate-800/40' : 'hover:border-primary/45 hover:bg-slate-900/40'}`}>
                   <div className="flex items-start gap-4">
-                    <div className="mt-1 cursor-pointer" onClick={() => toggleTaskComplete(task.id)}>
-                      {task.completed ? <CheckCircle className="text-green-500" /> : <div className="w-6 h-6 border-2 border-slate-600 rounded-full"></div>}
+                    <div className="mt-1 cursor-pointer flex-shrink-0" onClick={() => toggleTaskComplete(task.id)}>
+                      {task.completed ? <CheckCircle className="text-green-500" /> : <div className="w-6 h-6 border-2 border-slate-700 hover:border-slate-500 rounded-full flex-shrink-0 transition-colors"></div>}
                     </div>
                     <div>
                       <h4 className={`font-semibold text-textMain ${task.completed ? 'line-through' : ''}`}>{task.title}</h4>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-secondary font-medium">
-                        <span className="flex items-center gap-1 bg-slate-700 px-2 py-1 rounded">
+                      <div className="flex items-center gap-3 mt-2 text-xs text-secondary font-medium flex-wrap">
+                        <span className="flex items-center gap-1 bg-slate-800/80 border border-slate-700/60 px-2 py-1 rounded text-slate-300">
                           {task.type === 'Learning' && <BookOpen size={12} />}
                           {task.type === 'Coding' && <PenTool size={12} />}
                           {task.type === 'Mock Test' && <Clock size={12} />}
@@ -389,11 +389,11 @@ const HomeDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <div>
+                  <div className="w-full sm:w-auto flex justify-end flex-shrink-0">
                     {task.completed ? (
                       <span className="text-green-500 font-bold text-sm px-3 py-1 bg-green-500/10 rounded-full">Completed</span>
                     ) : (
-                      <button className="btn-primary py-1.5 px-4 text-sm" onClick={() => toggleTaskComplete(task.id)}>Mark Complete</button>
+                      <button className="btn-primary py-1.5 px-4 text-sm w-full sm:w-auto text-center" onClick={() => toggleTaskComplete(task.id)}>Mark Complete</button>
                     )}
                   </div>
                 </div>
@@ -406,7 +406,7 @@ const HomeDashboard = () => {
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Building size={20} className="text-primary" /> Target Companies</h3>
             <div className="flex flex-wrap gap-3">
               {targetCompanies.length > 0 ? targetCompanies.map(c => (
-                <div key={c} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm font-semibold flex items-center gap-2">
+                <div key={c} className="px-4 py-2 bg-slate-900/50 border border-slate-800 hover:border-primary/45 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-slate-900/80 transition-all cursor-pointer">
                    <Building size={16} className="text-secondary" /> {c}
                 </div>
               )) : <span className="text-sm text-secondary">No target companies selected yet. Update in your Profile.</span>}

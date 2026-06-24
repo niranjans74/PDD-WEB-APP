@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BookOpen, HelpCircle, ArrowLeft, ChevronRight, Calculator, CheckCircle, Lightbulb, AlertTriangle } from 'lucide-react';
+import { BookOpen, HelpCircle, ArrowLeft, ChevronRight, Calculator, CheckCircle, Lightbulb, AlertTriangle, Bookmark } from 'lucide-react';
 import { practiceData } from '../data/practiceData';
+import { API_BASE_URL, syncFetch } from '../assets/api';
 
 const topicDataMap = {
   '1': {
@@ -171,18 +172,168 @@ const fallbackTopic = {
   practice: []
 };
 
+const topicIdToKey = {
+  // Aptitude
+  'apt-1': '2',  // Percentages (Profit & Loss / Percentages)
+  'apt-2': '2',  // Profit & Loss
+  'apt-3': '1',  // Time & Work
+  'apt-4': '1',  // Time, Speed & Distance
+  'apt-5': '2',  // Ratio & Proportion
+  'apt-6': '3',  // Number System
+  'apt-7': '3',  // Algebra
+  'apt-8': '2',  // Averages
+  'apt-9': '2',  // Simple & Compound Interest
+  'apt-10': '3', // Data Interpretation
+  'apt-11': '3', // Probability
+  'apt-12': '3', // Permutations
+
+  // Reasoning
+  'rsn-1': '4',  // Syllogisms
+  'rsn-2': '5',  // Blood Relations
+  'rsn-3': '4',  // Coding-Decoding
+  'rsn-4': '5',  // Direction Sense
+  'rsn-5': '6',  // Seating Arrangements
+  'rsn-6': '6',  // Logical Puzzles
+  'rsn-7': '6',  // Data Sufficiency
+  'rsn-8': '4',  // Statement & Assumption
+  'rsn-9': '6',  // Ranking & Order
+  'rsn-10': '5', // Calendar & Clock
+
+  // Core Subjects
+  'cs-1': '10',  // DSA
+  'cs-2': '10',  // OOP
+  'cs-3': '8',   // DBMS
+  'cs-4': '8',   // SQL
+  'cs-5': '7',   // OS
+  'cs-6': '9',   // CN
+  'cs-7': '10',  // Software Eng
+  'cs-8': '10',  // SDLC
+  'cs-9': '10',  // Java
+  'cs-10': '10', // Python
+
+  // Verbal
+  'vrb-1': '11',  // Reading Comprehension
+  'vrb-2': '12',  // Error Spotting
+  'vrb-3': '12',  // Sentence Improvement
+  'vrb-4': '12',  // Fill in the blanks
+  'vrb-5': '11',  // Para Jumbles
+  'vrb-6': '11',  // Synonyms & Antonyms
+  'vrb-7': '11',  // Vocabulary Building
+  'vrb-8': '12',  // Active & Passive
+  'vrb-9': '12',  // Direct & Indirect
+  'vrb-10': '12'  // Grammar Essentials
+};
+
+const topicTitles = {
+  // Aptitude
+  'apt-1': 'Percentages',
+  'apt-2': 'Profit & Loss',
+  'apt-3': 'Time & Work',
+  'apt-4': 'Time, Speed & Distance',
+  'apt-5': 'Ratio & Proportion',
+  'apt-6': 'Number System',
+  'apt-7': 'Algebra',
+  'apt-8': 'Averages',
+  'apt-9': 'Simple & Compound Interest',
+  'apt-10': 'Data Interpretation',
+  'apt-11': 'Probability',
+  'apt-12': 'Permutations & Combinations',
+
+  // Reasoning
+  'rsn-1': 'Syllogisms',
+  'rsn-2': 'Blood Relations',
+  'rsn-3': 'Coding-Decoding',
+  'rsn-4': 'Direction Sense',
+  'rsn-5': 'Seating Arrangements',
+  'rsn-6': 'Logical Puzzles',
+  'rsn-7': 'Data Sufficiency',
+  'rsn-8': 'Statement & Assumption',
+  'rsn-9': 'Ranking & Order',
+  'rsn-10': 'Calendar & Clock Problems',
+
+  // Core Subjects
+  'cs-1': 'Data Structures & Algorithms',
+  'cs-2': 'Object-Oriented Programming',
+  'cs-3': 'DBMS',
+  'cs-4': 'SQL',
+  'cs-5': 'Operating Systems',
+  'cs-6': 'Computer Networks',
+  'cs-7': 'Software Engineering',
+  'cs-8': 'SDLC & Agile',
+  'cs-9': 'Java Fundamentals',
+  'cs-10': 'Python Fundamentals',
+
+  // Verbal
+  'vrb-1': 'Reading Comprehension',
+  'vrb-2': 'Error Spotting',
+  'vrb-3': 'Sentence Improvement',
+  'vrb-4': 'Fill in the Blanks',
+  'vrb-5': 'Para Jumbles',
+  'vrb-6': 'Synonyms & Antonyms',
+  'vrb-7': 'Vocabulary Building',
+  'vrb-8': 'Active & Passive Voice',
+  'vrb-9': 'Direct & Indirect Speech',
+  'vrb-10': 'Grammar Essentials'
+};
+
 const TopicDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('concepts');
   const [revealedAnswers, setRevealedAnswers] = useState({});
+  const [bookmarks, setBookmarks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bookmarks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
-  const topicData = topicDataMap[id] || fallbackTopic;
+  const resolvedId = topicIdToKey[id] || id;
+  const topicData = topicDataMap[resolvedId] || fallbackTopic;
 
   const topic = {
     id,
     ...topicData,
-    practice: practiceData[id] || topicData.practice || []
+    title: topicTitles[id] || topicData.title,
+    practice: practiceData[resolvedId] || topicData.practice || []
+  };
+
+  const isBookmarked = bookmarks.some(b => b.id === id);
+
+  const toggleBookmark = async () => {
+    let newBookmarks;
+    if (isBookmarked) {
+      newBookmarks = bookmarks.filter(b => b.id !== id);
+    } else {
+      const newBookmark = {
+        id: id,
+        title: topic.title,
+        category: topic.category,
+        time: '15 mins',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      };
+      newBookmarks = [...bookmarks, newBookmark];
+    }
+    setBookmarks(newBookmarks);
+    localStorage.setItem('bookmarks', JSON.stringify(newBookmarks));
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await syncFetch(`${API_BASE_URL}/api/sync/bookmarks`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ bookmarks: newBookmarks })
+        });
+      } catch (err) {
+        console.error('Error saving bookmark:', err);
+      }
+    }
   };
 
   const toggleAnswer = (qId) => {
@@ -198,12 +349,21 @@ const TopicDetail = () => {
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-4">
           <ArrowLeft size={18} /> Back to Topics
         </button>
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between items-end flex-wrap gap-4">
           <div>
             <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-bold mb-3 inline-block">
               {topic.category}
             </span>
-            <h1 className="text-3xl font-bold text-textMain">{topic.title}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-textMain">{topic.title}</h1>
+              <button 
+                onClick={toggleBookmark}
+                className="p-2 bg-slate-800/80 hover:bg-slate-700/80 rounded-xl border border-slate-700 transition-all text-secondary"
+                title="Bookmark Topic"
+              >
+                <Bookmark size={20} className={isBookmarked ? "text-primary fill-primary" : "text-slate-500 hover:text-white transition-colors"} />
+              </button>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-sm font-bold text-primary mb-1">{topic.progress}% Completed</div>

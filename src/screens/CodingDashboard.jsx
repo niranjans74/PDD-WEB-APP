@@ -379,7 +379,13 @@ const CodingDashboard = () => {
 
     const fetchSyncData = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        try {
+          const loadedBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+          setBookmarks(loadedBookmarks);
+        } catch (e) {}
+        return;
+      }
       try {
         const res = await syncFetch(`${API_BASE_URL}/api/sync/all`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -401,6 +407,10 @@ const CodingDashboard = () => {
         }
       } catch (err) {
         console.error('Error loading coding sync data:', err);
+        try {
+          const loadedBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+          setBookmarks(loadedBookmarks);
+        } catch (e) {}
       }
     };
     fetchSyncData();

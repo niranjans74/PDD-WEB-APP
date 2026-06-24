@@ -539,9 +539,6 @@ const UserProfile = () => {
                         onClick={() => {
                           const newSelected = selectedCompanies.filter(c => c !== comp);
                           setSelectedCompanies(newSelected);
-                          localStorage.setItem('targetCompanies', JSON.stringify(newSelected));
-                          window.dispatchEvent(new Event('targetCompaniesUpdated'));
-                          saveTargetCompanies(newSelected);
                         }}
                         className="ml-2 hover:text-red-300"
                       >
@@ -559,6 +556,29 @@ const UserProfile = () => {
                   )}
                 </div>
                 <p className="text-sm text-secondary mb-8">{selectedCompanies.length}/5 Selected</p>
+
+                {selectedCompanies.length === 5 && (
+                  <button 
+                    className="mb-8 btn-primary flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
+                    onClick={async () => {
+                      setIsSaving(true);
+                      try {
+                        localStorage.setItem('targetCompanies', JSON.stringify(selectedCompanies));
+                        window.dispatchEvent(new Event('targetCompaniesUpdated'));
+                        await saveTargetCompanies(selectedCompanies);
+                        alert('Target companies and progress saved successfully!');
+                      } catch (err) {
+                        console.error(err);
+                        alert('Failed to save target companies.');
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Saving...' : 'Save Target Companies'}
+                  </button>
+                )}
 
                 {/* Company Picker */}
                 {showCompanyPicker && (
@@ -583,10 +603,6 @@ const UserProfile = () => {
                                 newSelected.push(comp);
                               }
                               setSelectedCompanies(newSelected);
-                              localStorage.setItem('targetCompanies', JSON.stringify(newSelected));
-                              // Dispatch event so other components can react if needed
-                              window.dispatchEvent(new Event('targetCompaniesUpdated'));
-                              saveTargetCompanies(newSelected);
                             }}
                             className={`px-4 py-2 rounded-full border transition-all flex items-center gap-2 ${
                               isSelected 
