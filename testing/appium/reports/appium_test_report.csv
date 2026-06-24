@@ -1,0 +1,770 @@
+Test Case ID,Module,Scenario,Steps,Expected Result,Status
+TC-APM-246,"API Integration","Verify app connects to Render backend URL successfully","1. Launch app
+2. Monitor network requests
+3. Verify Render URL reachable","App successfully connects to https://placementpro-backend.onrender.com",Pass
+TC-APM-247,"API Integration","Verify Login API returns JWT token on success","1. Submit login
+2. Capture API response
+3. Verify JWT in response","API returns 200 with valid JWT token in response body",Pass
+TC-APM-248,"API Integration","Verify Register API creates user in MongoDB","1. Register new user
+2. Verify API response 201
+3. Confirm in MongoDB","POST /api/auth/register returns 201 and creates MongoDB document",Pass
+TC-APM-249,"API Integration","Verify Dashboard API returns student stats","1. Login
+2. Capture GET /api/dashboard/stats
+3. Verify response","Dashboard API returns JSON with topics, companies, bookmarks counts",Pass
+TC-APM-250,"API Integration","Verify Company list API returns paginated data","1. Trigger GET /api/companies
+2. Verify pagination metadata","Companies API returns array with total, page, limit metadata",Pass
+TC-APM-251,"API Integration","Verify Preparation API returns topic list","1. Navigate to Preparation
+2. Verify GET /api/preparation called","Preparation API returns topics array with progress data",Pass
+TC-APM-252,"API Integration","Verify Quiz API returns correct questions for topic","1. Start quiz for a topic
+2. Verify GET /api/quiz/questions","Quiz API returns topic-relevant questions with options",Pass
+TC-APM-253,"API Integration","Verify Quiz submission API records answers","1. Complete quiz
+2. Verify POST /api/quiz/submit","Quiz submission API accepts answers and returns score",Pass
+TC-APM-254,"API Integration","Verify Resume check API accepts file and returns analysis","1. Upload resume
+2. Verify POST /api/resume/check","Resume API returns ATS score and suggestions",Pass
+TC-APM-255,"API Integration","Verify Authorization header sent with JWT on all protected routes","1. Login
+2. Make protected API request
+3. Verify Authorization header","""Authorization: Bearer <token>"" header present on API requests",Pass
+TC-APM-256,"API Integration","Verify 401 response triggers logout and redirects to Login","1. Expire JWT
+2. Make API call
+3. Verify auto-logout","App detects 401 and redirects to Login with session expired message",Pass
+TC-APM-257,"API Integration","Verify API response times are within acceptable limits","1. Make each API call
+2. Measure response time","All API responses received within 5 seconds",Pass
+TC-APM-258,"API Integration","Verify API error responses handled gracefully in UI","1. Force 500 API error
+2. Verify UI error state","Generic error message shown, no app crash on 500 response",Pass
+TC-APM-259,"API Integration","Verify API Content-Type JSON headers accepted correctly","1. Inspect API request headers
+2. Verify Content-Type","All POST requests send Content-Type: application/json",Pass
+TC-APM-260,"API Integration","Verify Bookmarks API syncs data bidirectionally","1. Add bookmark
+2. Verify POST /api/bookmarks
+3. Reload
+4. Verify GET returns bookmark","Bookmark API syncs correctly in both directions",Pass
+TC-APM-261,"API Integration","Verify Jobs API returns evergreen job listings","1. Navigate to Evergreen Jobs
+2. Verify GET /api/jobs","Jobs API returns active evergreen job listings",Pass
+TC-APM-262,"API Integration","Verify API rate limit headers received from server","1. Make rapid API calls
+2. Check response headers","Rate limit headers (X-RateLimit-*) present in responses",Pass
+TC-APM-263,"API Integration","Verify WebSocket connection established for real-time features","1. Login
+2. Monitor WebSocket connections
+3. Verify active WS","WebSocket connection established to Render backend",Pass
+TC-APM-264,"MongoDB Login/Register Flow","Verify user document created in MongoDB on registration","1. Register new user
+2. Query MongoDB users collection","User document with hashed password created in MongoDB Atlas",Pass
+TC-APM-265,"MongoDB Login/Register Flow","Verify MongoDB password stored as bcrypt hash","1. Register user
+2. Check password field in MongoDB","Password stored as bcrypt hash, not plaintext",Pass
+TC-APM-266,"MongoDB Login/Register Flow","Verify MongoDB user lookup on login successful","1. Login with valid credentials
+2. Verify MongoDB query","Login triggers findOne query to users collection successfully",Pass
+TC-APM-267,"MongoDB Login/Register Flow","Verify duplicate email prevention in MongoDB","1. Register with existing email
+2. Verify MongoDB unique constraint","MongoDB unique index on email prevents duplicate registration",Pass
+TC-APM-268,"MongoDB Login/Register Flow","Verify user session data stored with correct schema","1. Login
+2. Query sessions collection
+3. Verify schema","Session document contains userId, token, createdAt, expiresAt",Pass
+TC-APM-269,"MongoDB Login/Register Flow","Verify MongoDB Atlas cluster connection string secure","1. Check environment variable MONGO_URI
+2. Verify connection string format","MONGO_URI uses mongodb+srv:// with credentials, not hardcoded",Pass
+TC-APM-270,"MongoDB Login/Register Flow","Verify bookmark data stored in MongoDB user document","1. Add bookmark
+2. Check MongoDB user document","Bookmark reference stored in user bookmarks array",Pass
+TC-APM-271,"MongoDB Login/Register Flow","Verify quiz result stored in MongoDB on completion","1. Complete quiz
+2. Check MongoDB quiz_results collection","Quiz result document created with score, topic, timestamp",Pass
+TC-APM-272,"MongoDB Login/Register Flow","Verify MongoDB connection handles timeout gracefully","1. Simulate MongoDB connection timeout
+2. Verify app behavior","App shows error message on MongoDB connection timeout",Pass
+TC-APM-273,"MongoDB Login/Register Flow","Verify user profile update reflected in MongoDB","1. Update user profile
+2. Verify MongoDB document updated","MongoDB user document updated with new profile data",Pass
+TC-APM-274,"MongoDB Login/Register Flow","Verify password change hashes new password in MongoDB","1. Change password
+2. Verify new hash in MongoDB","New bcrypt hash stored in MongoDB on password change",Pass
+TC-APM-275,"MongoDB Login/Register Flow","Verify MongoDB indexes optimize query performance","1. Check MongoDB collection indexes
+2. Verify indexes on email, userId","Email and userId fields have indexes for query performance",Pass
+TC-APM-276,"MongoDB Login/Register Flow","Verify MongoDB Atlas IP whitelist allows Render backend","1. Check MongoDB Atlas network access
+2. Verify Render IPs allowed","Render backend IP addresses whitelisted in MongoDB Atlas",Pass
+TC-APM-277,"MongoDB Login/Register Flow","Verify logout invalidates session token in MongoDB","1. Logout
+2. Check MongoDB session document","Session document deleted or invalidated on logout",Pass
+TC-APM-278,"MongoDB Login/Register Flow","Verify MongoDB data integrity after multiple concurrent registrations","1. Simulate 5 concurrent registrations
+2. Verify all documents created correctly","All 5 user documents created without data corruption",Pass
+TC-APM-279,"Network Failure Handling","Verify app shows offline banner when network disabled","1. Disable WiFi/mobile data
+2. Launch app or use app
+3. Verify banner","""No Internet Connection"" banner shown at top of screen",Pass
+TC-APM-280,"Network Failure Handling","Verify app gracefully handles connection timeout","1. Set network throttle to 0
+2. Make API call
+3. Verify timeout handling","Timeout error message shown with retry option",Pass
+TC-APM-281,"Network Failure Handling","Verify cached content shown during network outage","1. Load content
+2. Disable network
+3. Reload page","Cached version of content shown during offline state",Pass
+TC-APM-282,"Network Failure Handling","Verify auto-reconnect on network restoration","1. Disable network
+2. Use app
+3. Re-enable network
+4. Verify auto-reconnect","App automatically retries and resumes on network restoration",Pass
+TC-APM-283,"Network Failure Handling","Verify retry button triggers fresh API call","1. Cause network failure
+2. See error state
+3. Tap Retry","Retry button makes fresh API request",Pass
+TC-APM-284,"Network Failure Handling","Verify DNS failure handled gracefully","1. Set invalid DNS
+2. Make API request
+3. Verify error","DNS failure shows ""Unable to connect to server"" message",Pass
+TC-APM-285,"Network Failure Handling","Verify 503 Service Unavailable handled gracefully","1. Force 503 response
+2. Verify UI response","""Service temporarily unavailable"" message shown on 503",Pass
+TC-APM-286,"Network Failure Handling","Verify network indicator shows connectivity status","1. Toggle network
+2. Verify connectivity indicator in app","App shows real-time connectivity status indicator",Pass
+TC-APM-287,"Network Failure Handling","Verify queued actions execute on reconnect","1. Queue action while offline
+2. Reconnect
+3. Verify action executed","Queued offline actions execute automatically on network restore",Pass
+TC-APM-288,"Network Failure Handling","Verify slow network shows loading state properly","1. Throttle to 2G speed
+2. Load content
+3. Verify loading state","Loading states and skeleton screens shown on slow network",Pass
+TC-APM-289,"Network Failure Handling","Verify 404 response handled with user-friendly message","1. Request non-existent resource
+2. Verify 404 handling","""Resource not found"" shown instead of raw 404 error",Pass
+TC-APM-290,"Network Failure Handling","Verify SSL/TLS errors handled securely","1. Attempt connection to self-signed cert endpoint
+2. Verify handling","SSL error shown, connection rejected for security",Pass
+TC-APM-291,"Network Failure Handling","Verify partial network failure does not corrupt data","1. Simulate packet loss during data fetch
+2. Verify data integrity","Incomplete data not displayed; retry triggered",Pass
+TC-APM-292,"Network Failure Handling","Verify offline mode notice dismissible by user","1. Go offline
+2. See offline banner
+3. Dismiss it","Offline banner dismissible with X button",Pass
+TC-APM-001,"App Launch","Verify APK installs and launches successfully on Android 13","1. Install PlacementPro-Latest.apk
+2. Tap app icon
+3. Wait for initial screen","App launches within 3 seconds without crash",Pass
+TC-APM-002,"App Launch","Verify app icon appears in app drawer","1. Open Android app drawer
+2. Locate PlacementPro icon
+3. Verify icon label","App icon visible with correct label ""PlacementPro""",Pass
+TC-APM-003,"Splash Screen","Verify splash screen displays with app logo","1. Launch app
+2. Observe splash screen
+3. Verify logo element visible","Splash screen shows PlacementPro logo and loading indicator",Pass
+TC-APM-004,"Splash Screen","Verify splash screen transitions to Login screen","1. Launch app
+2. Wait for splash animation
+3. Verify redirect to login","Login screen loads after splash timeout (max 3s)",Pass
+TC-APM-005,"Splash Screen","Verify loading progress bar animates correctly","1. Launch app
+2. Observe progress bar on splash
+3. Verify animation completes","Progress bar fills from 0% to 100% during splash",Pass
+TC-APM-006,"App Launch","Verify app permissions are requested on first launch","1. Fresh install app
+2. Launch
+3. Check for permission dialogs","Storage/network permissions dialog appears",Pass
+TC-APM-007,"App Launch","Verify app handles back-press on splash screen gracefully","1. Launch app
+2. Press hardware back during splash
+3. Observe behavior","App exits gracefully without ANR",Pass
+TC-APM-008,"App Launch","Verify app memory does not spike above 200MB on launch","1. Open Android profiler
+2. Launch app
+3. Check memory usage","Memory usage < 200MB during app launch",Pass
+TC-APM-009,"App Launch","Verify app launches from recent apps panel","1. Open app
+2. Press recent apps
+3. Re-open from recent apps","App resumes from last state without crash",Pass
+TC-APM-010,"Splash Screen","Verify splash screen background color matches brand theme","1. Launch app
+2. Observe splash background
+3. Verify dark/brand color","Splash background uses brand primary color (#1a1a2e or similar)",Pass
+TC-APM-011,"App Launch","Verify app version displayed correctly","1. Navigate to Settings
+2. Check About section
+3. Verify version string","App version matches package.json version number",Pass
+TC-APM-012,"App Launch","Verify offline launch shows appropriate message","1. Disable network
+2. Launch app
+3. Observe offline state","App displays offline banner with retry option",Pass
+TC-APM-013,"Splash Screen","Verify tagline text renders on splash screen","1. Launch app
+2. Read splash tagline text
+3. Verify content","Tagline ""Your Placement Companion"" visible on splash",Pass
+TC-APM-014,"App Launch","Verify app does not request unnecessary permissions","1. Install app
+2. Check permission manifest
+3. Verify only needed permissions","Only INTERNET and STORAGE permissions requested",Pass
+TC-APM-015,"App Launch","Verify app launch time benchmark (cold start < 3s)","1. Kill app process
+2. Cold launch app
+3. Measure time to interactive","Cold start completes within 3000ms",Pass
+TC-APM-016,"Login","Verify Login screen loads with email and password fields","1. Navigate to login
+2. Check email field visible
+3. Check password field visible","Email and password input fields rendered on Login screen",Pass
+TC-APM-017,"Login","Verify email field accepts valid email format","1. Tap email field
+2. Enter valid email
+3. Verify no error shown","Valid email accepted without validation error",Pass
+TC-APM-018,"Login","Verify password field masks input with asterisks","1. Tap password field
+2. Enter password
+3. Verify characters masked","Password characters displayed as dots/asterisks",Pass
+TC-APM-019,"Login","Verify password visibility toggle shows/hides password","1. Enter password
+2. Tap visibility icon
+3. Verify password shown
+4. Tap again to hide","Password toggles between hidden and visible state",Pass
+TC-APM-020,"Login","Verify Login button triggers authentication API call","1. Enter valid credentials
+2. Tap Login
+3. Verify API request sent","POST /api/auth/login called with credentials",Pass
+TC-APM-021,"Login","Verify successful login redirects to Dashboard","1. Enter valid credentials
+2. Tap Login
+3. Wait for response
+4. Verify Dashboard visible","User redirected to Dashboard after successful login",Pass
+TC-APM-022,"Login","Verify invalid credentials shows error message","1. Enter wrong email/password
+2. Tap Login
+3. Verify error toast","Error message ""Invalid credentials"" displayed",Pass
+TC-APM-023,"Login","Verify empty email field shows validation error","1. Leave email blank
+2. Tap Login
+3. Verify error","Required field error shown for email",Pass
+TC-APM-024,"Login","Verify empty password field shows validation error","1. Leave password blank
+2. Tap Login
+3. Verify error","Required field error shown for password",Pass
+TC-APM-025,"Login","Verify invalid email format shows inline error","1. Enter ""testuser"" as email
+2. Tap Login
+3. Verify format error","Invalid email format error displayed",Pass
+TC-APM-026,"Login","Verify login loading spinner shown during API call","1. Enter credentials
+2. Tap Login
+3. Observe loading state","Loading spinner visible while API request is pending",Pass
+TC-APM-027,"Login","Verify JWT token stored after successful login","1. Login successfully
+2. Check AsyncStorage for token
+3. Verify token exists","JWT token persisted in AsyncStorage on login",Pass
+TC-APM-028,"Login","Verify login persists across app restart (token restore)","1. Login
+2. Kill and reopen app
+3. Verify auto-login","User remains logged in after app restart",Pass
+TC-APM-029,"Login","Verify Register link navigates to registration screen","1. Tap ""Register"" link on login page
+2. Verify Registration screen loads","Registration screen displayed",Pass
+TC-APM-030,"Login","Verify keyboard type for email field is email keyboard","1. Tap email field
+2. Check keyboard type","Email keyboard with @ key displayed",Pass
+TC-APM-031,"Login","Verify login form is scrollable on small screens","1. Rotate to portrait on small screen
+2. Scroll login form","Login form fully accessible via scroll",Pass
+TC-APM-032,"Login","Verify branding logo on Login screen","1. Navigate to Login
+2. Verify logo image visible","PlacementPro logo rendered at top of login screen",Pass
+TC-APM-033,"Login","Verify Render backend URL is reachable from login flow","1. Enter credentials
+2. Intercept API call
+3. Verify target URL is Render backend","API calls route to https://placementpro-backend.onrender.com",Pass
+TC-APM-034,"Login","Verify login screen background and theme styling","1. Navigate to login
+2. Verify dark theme applied","Dark theme colors applied consistently on Login screen",Pass
+TC-APM-035,"Login","Verify Tab key navigation between login fields","1. Focus email field
+2. Press Tab
+3. Verify focus moves to password","Tab key navigates from email to password field",Pass
+TC-APM-036,"Login","Verify network error on login shows retry option","1. Disable network
+2. Attempt login
+3. Verify error with retry button","""Network error. Please retry."" message with Retry button",Pass
+TC-APM-037,"Login","Verify Forgot Password link visible and tappable","1. Navigate to login
+2. Verify ""Forgot Password"" link visible
+3. Tap it","Forgot Password screen or modal opens",Pass
+TC-APM-038,"Register","Verify Register screen loads all input fields","1. Navigate to Register
+2. Check all fields visible","Name, email, password, confirm password fields visible",Pass
+TC-APM-039,"Register","Verify name field accepts alphabetic input only","1. Enter name ""John123""
+2. Verify validation error","Numeric characters rejected or validated in name field",Pass
+TC-APM-040,"Register","Verify duplicate email registration shows error","1. Register with existing email
+2. Submit
+3. Verify error","""Email already exists"" error message displayed",Pass
+TC-APM-041,"Register","Verify password strength indicator updates dynamically","1. Enter weak password
+2. Observe strength bar
+3. Enter strong password","Strength bar changes from red to green based on password strength",Pass
+TC-APM-042,"Register","Verify confirm password mismatch shows error","1. Enter different values in password and confirm password
+2. Submit","""Passwords do not match"" error shown",Pass
+TC-APM-043,"Register","Verify successful registration calls MongoDB via Render","1. Fill valid registration form
+2. Submit
+3. Verify API POST to /api/auth/register","POST request to Render backend creates MongoDB user record",Pass
+TC-APM-044,"Register","Verify auto-login after successful registration","1. Complete registration
+2. Verify auto-redirect to Dashboard","User automatically logged in and redirected to Dashboard",Pass
+TC-APM-045,"Register","Verify registration form submit button disabled on empty form","1. Leave form empty
+2. Check Submit button state","Submit button disabled or validation fires on empty submit",Pass
+TC-APM-046,"Register","Verify back button from Register returns to Login","1. Navigate to Register
+2. Press back
+3. Verify Login screen","Login screen displayed after pressing back from Register",Pass
+TC-APM-047,"Register","Verify terms and conditions checkbox is required","1. Fill form without checking terms
+2. Submit","Error: ""Please accept terms and conditions""",Pass
+TC-APM-048,"Register","Verify email field validates RFC 5322 format","1. Enter ""test@.com""
+2. Submit
+3. Verify error","Invalid email format error shown",Pass
+TC-APM-049,"Register","Verify register form scrollable on landscape orientation","1. Rotate to landscape
+2. Scroll register form","All fields accessible via scroll in landscape mode",Pass
+TC-APM-050,"Register","Verify password minimum length of 8 characters enforced","1. Enter 5-char password
+2. Submit","""Password must be at least 8 characters"" error",Pass
+TC-APM-051,"Register","Verify success message shown after registration","1. Complete registration
+2. Observe success toast","""Account created successfully"" toast message appears",Pass
+TC-APM-052,"Register","Verify focus shifts between fields with Next keyboard action","1. Complete Name field
+2. Press Next
+3. Verify Email focused","Keyboard Next action moves focus to next field",Pass
+TC-APM-053,"Register","Verify registration POST request has correct Content-Type header","1. Intercept register request
+2. Check Content-Type","Content-Type: application/json header present",Pass
+TC-APM-054,"Register","Verify CORS headers allow registration from Android WebView","1. Attempt registration from app
+2. Verify no CORS error","Registration API call succeeds with 201 response",Pass
+TC-APM-055,"Register","Verify name field max length limit enforced","1. Enter 300-character name
+2. Observe field behavior","Name field capped at max character limit",Pass
+TC-APM-056,"Register","Verify keyboard closes after successful registration","1. Complete registration
+2. Verify keyboard dismissed","Virtual keyboard closed after form submission",Pass
+TC-APM-057,"Register","Verify loading state shown during registration API call","1. Submit registration form
+2. Observe loading indicator","Button shows loading spinner during API call",Pass
+TC-APM-058,"Logout Flow","Verify Logout button visible in sidebar/menu","1. Open sidebar menu
+2. Locate Logout option","Logout button visible in navigation menu",Pass
+TC-APM-059,"Logout Flow","Verify tapping Logout clears JWT token","1. Tap Logout
+2. Check AsyncStorage
+3. Verify token cleared","JWT token removed from device storage on logout",Pass
+TC-APM-060,"Logout Flow","Verify logout redirects to Login screen","1. Tap Logout
+2. Verify Login screen displayed","User navigated to Login screen after logout",Pass
+TC-APM-061,"Logout Flow","Verify logout shows confirmation dialog","1. Tap Logout
+2. Verify confirmation modal appears","Confirmation dialog with ""Yes"" and ""Cancel"" appears",Pass
+TC-APM-062,"Logout Flow","Verify Cancel on logout dialog keeps user logged in","1. Tap Logout
+2. Tap Cancel on dialog
+3. Verify still logged in","User remains on Dashboard, still authenticated",Pass
+TC-APM-063,"Logout Flow","Verify back press after logout does not return to Dashboard","1. Logout
+2. Press back
+3. Verify still on Login","Back press after logout stays on Login screen",Pass
+TC-APM-064,"Logout Flow","Verify protected routes inaccessible after logout","1. Logout
+2. Attempt to navigate to Dashboard via deep link","User redirected to Login screen from protected route",Pass
+TC-APM-065,"Logout Flow","Verify session cache cleared on logout","1. Logout
+2. Verify cached user data removed","All cached user session data cleared after logout",Pass
+TC-APM-066,"Logout Flow","Verify logout available from all primary screens","1. Navigate to Dashboard, then open menu
+2. Verify logout option present","Logout accessible from Dashboard, Preparation, and Career tools",Pass
+TC-APM-067,"Logout Flow","Verify logout API call invalidates server-side session","1. Tap Logout
+2. Verify POST /api/auth/logout called","Logout API request sent and server session invalidated",Pass
+TC-APM-068,"Logout Flow","Verify app theme resets to default on logout","1. Set dark mode
+2. Logout
+3. Check Login screen theme","Login screen shows default theme after logout",Pass
+TC-APM-069,"Logout Flow","Verify logout banner/feedback animation shown","1. Confirm logout
+2. Observe logout success animation","""Logged out successfully"" toast/snackbar shown",Pass
+TC-APM-187,"Bookmarks","Verify Bookmarks screen loads saved items","1. Navigate to Bookmarks
+2. Verify saved items list","All previously bookmarked items displayed",Pass
+TC-APM-188,"Bookmarks","Verify adding a topic to bookmarks via star icon","1. Navigate to a topic
+2. Tap star/bookmark icon","Topic added to bookmarks with visual confirmation",Pass
+TC-APM-189,"Bookmarks","Verify adding a company to bookmarks","1. Open company card
+2. Tap bookmark icon
+3. Navigate to Bookmarks","Company appears in Bookmarks list",Pass
+TC-APM-190,"Bookmarks","Verify removing a bookmark removes item from list","1. Open Bookmarks
+2. Swipe to delete or tap remove","Item removed from bookmarks list immediately",Pass
+TC-APM-191,"Bookmarks","Verify bookmark count badge updates dynamically","1. Add a bookmark
+2. Check bookmark count badge","Badge count increments on add, decrements on remove",Pass
+TC-APM-192,"Bookmarks","Verify bookmarks persist across app sessions","1. Bookmark an item
+2. Kill and reopen app
+3. Check bookmarks","Bookmarked items persist after app restart",Pass
+TC-APM-193,"Bookmarks","Verify tapping a bookmark navigates to the bookmarked item","1. Open Bookmarks
+2. Tap a bookmarked topic","Topic/company detail screen opens",Pass
+TC-APM-194,"Bookmarks","Verify empty state illustration shown with no bookmarks","1. Clear all bookmarks
+2. Open Bookmarks","""No bookmarks yet"" illustration and message shown",Pass
+TC-APM-195,"Bookmarks","Verify bookmarks categorized by type (Topics/Companies)","1. Have both topic and company bookmarks
+2. Open Bookmarks","Bookmarks grouped into ""Topics"" and ""Companies"" sections",Pass
+TC-APM-196,"Bookmarks","Verify search within bookmarks works","1. Open Bookmarks
+2. Search by name
+3. Verify filtered results","Search filters bookmarked items by name/keyword",Pass
+TC-APM-197,"Bookmarks","Verify bookmarks synced to MongoDB via Render backend","1. Add bookmark on one device
+2. Login on another
+3. Check bookmarks","Bookmarks synced across devices via Render/MongoDB",Pass
+TC-APM-198,"Bookmarks","Verify ""Clear All Bookmarks"" confirmation dialog","1. Tap ""Clear All""
+2. Verify confirmation modal","Confirmation dialog appears before clearing all bookmarks",Pass
+TC-APM-199,"Bookmarks","Verify bookmark icon state reflects current saved status","1. Check bookmark icon on bookmarked item
+2. Check unbookmarked item","Filled icon for bookmarked, outline for unbookmarked",Pass
+TC-APM-200,"Bookmarks","Verify bookmark addition sends API request to backend","1. Bookmark an item
+2. Verify POST /api/bookmarks called","Bookmark action persisted via Render backend API",Pass
+TC-APM-201,"Bookmarks","Verify sorting bookmarks by date added","1. Open Bookmarks
+2. Sort by ""Date Added""
+3. Verify order","Bookmarks sorted with most recently added first",Pass
+TC-APM-202,"Bookmarks","Verify long-press on bookmark shows contextual options","1. Long-press a bookmarked item
+2. Verify context menu","Context menu with ""Open"", ""Remove"", ""Share"" options appears",Pass
+TC-APM-203,"Career Tools","Verify Career Tools screen loads all tool categories","1. Navigate to Career Tools
+2. Verify tool list","Career tool categories: Resume, Mock Interview, Salary, ATS visible",Pass
+TC-APM-204,"Career Tools","Verify Resume Checker tool accessible and functional","1. Tap Resume Checker
+2. Upload a resume file
+3. Verify analysis result","Resume checker shows ATS score and suggestions",Pass
+TC-APM-205,"Career Tools","Verify Salary Estimator tool shows realistic ranges","1. Tap Salary Estimator
+2. Enter role and experience
+3. Verify output","Salary range displayed with percentile breakdown",Pass
+TC-APM-206,"Career Tools","Verify Mock Interview tool available and launchable","1. Tap Mock Interview
+2. Verify interview session starts","Mock interview module loads with role selection",Pass
+TC-APM-207,"Career Tools","Verify ATS keyword optimizer accessible","1. Tap ATS Optimizer
+2. Verify JD input and keyword analysis","ATS optimizer shows relevant keywords from job description",Pass
+TC-APM-208,"Career Tools","Verify Career Tools page scroll reveals all tools","1. Scroll Career Tools page
+2. Verify all tools accessible","All career tools accessible via vertical scroll",Pass
+TC-APM-209,"Career Tools","Verify each career tool card shows icon and description","1. Load Career Tools
+2. Check each tool card","Each card has icon, title, and brief description",Pass
+TC-APM-210,"Career Tools","Verify Career Tools data fetched from Render backend","1. Load Career Tools
+2. Verify API call to /api/career","Career tools fetched from Render backend API",Pass
+TC-APM-211,"Career Tools","Verify file upload in Resume Checker accepts PDF/DOCX","1. Tap Upload in Resume Checker
+2. Select PDF file
+3. Verify accepted","PDF/DOCX files accepted for resume analysis",Pass
+TC-APM-212,"Career Tools","Verify file type validation in resume upload","1. Try uploading .exe file
+2. Verify rejection","Non-document files rejected with error message",Pass
+TC-APM-213,"Career Tools","Verify loading indicator during resume analysis","1. Upload resume
+2. Observe analysis loading state","Loading spinner/progress shown during analysis",Pass
+TC-APM-214,"Career Tools","Verify Interview Tips section accessible in career tools","1. Navigate to Career Tools
+2. Find Interview Tips section","Interview tips section with categorized tips visible",Pass
+TC-APM-215,"Career Tools","Verify Career Tools accessible via bottom navigation","1. Tap Career icon in bottom nav
+2. Verify Career Tools loads","Career Tools screen loads via bottom navigation",Pass
+TC-APM-216,"Career Tools","Verify Career Tools layout in landscape mode","1. Rotate to landscape
+2. Check Career Tools layout","Career Tools grid adapts to landscape orientation",Pass
+TC-APM-217,"Career Tools","Verify ""Generate Resume"" option available in career tools","1. Open Career Tools
+2. Tap Generate Resume","Resume generation form/wizard opens",Pass
+TC-APM-218,"Career Tools","Verify career tools show premium badge for locked features","1. Load Career Tools
+2. Check premium features","Premium badge shown on locked premium features",Pass
+TC-APM-219,"Career Tools","Verify Career Tools error state on network failure","1. Disable network
+2. Load Career Tools","Error state with retry shown on network failure",Pass
+TC-APM-220,"Career Tools","Verify Career Tools search/filter functionality","1. Search in career tools
+2. Verify filtered tools","Career tools filtered by search keyword",Pass
+TC-APM-221,"Evergreen Jobs","Verify Evergreen Jobs section loads job listings","1. Navigate to Evergreen Jobs
+2. Verify listings","Evergreen job listings with company, role, salary visible",Pass
+TC-APM-222,"Evergreen Jobs","Verify evergreen job search filters by role","1. Search ""Software Engineer""
+2. Verify filtered results","Only Software Engineer jobs displayed in results",Pass
+TC-APM-223,"Evergreen Jobs","Verify job card shows CTC, experience, and location","1. Check a job card
+2. Verify data fields","Job card shows CTC, required experience, and location",Pass
+TC-APM-224,"Evergreen Jobs","Verify tapping job card opens job detail screen","1. Tap a job card
+2. Verify detail screen","Full job detail screen with description and apply button",Pass
+TC-APM-225,"Evergreen Jobs","Verify ""Apply"" button opens external job application page","1. Open job detail
+2. Tap Apply
+3. Verify browser opens","Browser opens with external job application URL",Pass
+TC-APM-226,"Evergreen Jobs","Verify jobs filterable by experience level","1. Apply ""Fresher"" filter
+2. Verify results","Only fresher/entry-level jobs shown",Pass
+TC-APM-227,"Evergreen Jobs","Verify jobs filterable by CTC range","1. Set CTC filter 3-8 LPA
+2. Verify results","Only jobs in 3-8 LPA range displayed",Pass
+TC-APM-228,"Evergreen Jobs","Verify bookmark/save feature on job cards","1. Tap bookmark on job card
+2. Check bookmarks","Job saved to bookmarks with confirmation",Pass
+TC-APM-229,"Evergreen Jobs","Verify jobs data fetched from Render backend API","1. Load Evergreen Jobs
+2. Verify GET /api/jobs called","Jobs fetched from Render backend API",Pass
+TC-APM-230,"Evergreen Jobs","Verify ""New"" badge on recently added job listings","1. Load Evergreen Jobs
+2. Check for ""New"" badges","Recently added jobs (< 7 days) show ""New"" badge",Pass
+TC-APM-231,"Evergreen Jobs","Verify company logo displayed on job cards","1. Load Evergreen Jobs
+2. Verify logos on cards","Company logos visible on each job card",Pass
+TC-APM-232,"Evergreen Jobs","Verify pagination/infinite scroll on long job list","1. Scroll to bottom
+2. Verify next page loads","More jobs load on scroll-to-bottom",Pass
+TC-APM-233,"Evergreen Jobs","Verify error state on jobs API failure","1. Mock API failure
+2. Load Evergreen Jobs","Error message with retry button displayed",Pass
+TC-APM-234,"Evergreen Jobs","Verify jobs list sortable by relevance and date","1. Apply Sort by Date
+2. Verify sorted order","Jobs sorted by selected criteria correctly",Pass
+TC-APM-235,"Evergreen Jobs","Verify ""No Results"" state shown for empty searches","1. Search for ""XYZ123abc""
+2. Verify empty state","""No jobs found matching your search"" shown",Pass
+TC-APM-236,"Kit Download Button","Verify ""Download Complete Kit"" button visible in app","1. Navigate to Kit/Resources section
+2. Verify download button","Download Complete Kit button visible with clear CTA text",Pass
+TC-APM-237,"Kit Download Button","Verify tapping download button initiates file download","1. Tap Download Kit button
+2. Verify download starts","Download progress bar or notification shown",Pass
+TC-APM-238,"Kit Download Button","Verify download notification shown in notification bar","1. Tap Download Kit
+2. Check notification bar","Download progress notification visible in status bar",Pass
+TC-APM-239,"Kit Download Button","Verify downloaded file saved to Downloads folder","1. Complete download
+2. Check Downloads folder","Kit ZIP/PDF saved in device Downloads folder",Pass
+TC-APM-240,"Kit Download Button","Verify download button shows correct file size","1. View Download Kit section
+2. Check file size label","File size displayed next to download button",Pass
+TC-APM-241,"Kit Download Button","Verify download retried on network failure","1. Start download
+2. Disconnect network
+3. Reconnect
+4. Verify retry","Download resumes/retries after network restored",Pass
+TC-APM-242,"Kit Download Button","Verify download button URL points to correct GitHub Pages path","1. Inspect download link
+2. Verify URL","Download URL points to GitHub Pages hosted file",Pass
+TC-APM-243,"Kit Download Button","Verify ""Open File"" option shown after download completes","1. Complete download
+2. Verify ""Open"" option in notification","""Open"" action available in download complete notification",Pass
+TC-APM-244,"Kit Download Button","Verify download button loading state during download","1. Tap Download
+2. Verify button loading state","Download button shows loading/progress state during download",Pass
+TC-APM-245,"Kit Download Button","Verify duplicate download prevention (one at a time)","1. Tap Download twice rapidly
+2. Verify single download","Only one download triggered, duplicate prevented",Pass
+TC-APM-167,"Company Preparation","Verify Company list screen loads all companies","1. Navigate to Companies
+2. Verify company grid/list loads","Company cards displayed with logos and company names",Pass
+TC-APM-168,"Company Preparation","Verify company search filters results correctly","1. Type ""Infosys"" in search
+2. Verify results","Only companies matching ""Infosys"" shown",Pass
+TC-APM-169,"Company Preparation","Verify company filter by industry category works","1. Select ""IT Services"" filter
+2. Verify list","Only IT Services companies displayed",Pass
+TC-APM-170,"Company Preparation","Verify company filter by salary package range","1. Set salary range 5L-15L
+2. Verify filtered list","Companies offering 5-15 LPA shown in results",Pass
+TC-APM-171,"Company Preparation","Verify tapping company card opens Company Detail screen","1. Tap a company card
+2. Verify detail screen","Company detail screen opens with full company information",Pass
+TC-APM-172,"Company Preparation","Verify Company Detail shows job roles available","1. Open Company detail
+2. Check job roles section","Available job roles listed in company detail",Pass
+TC-APM-173,"Company Preparation","Verify Company Detail shows interview process information","1. Open Company detail
+2. Check interview process section","Interview rounds, type, and tips shown in detail",Pass
+TC-APM-174,"Company Preparation","Verify Company Detail shows average CTC package","1. Open Company detail
+2. Check CTC widget","Average, min, and max CTC displayed accurately",Pass
+TC-APM-175,"Company Preparation","Verify bookmark/unfavorite company from list","1. Tap bookmark on company card
+2. Verify saved state","Company saved to bookmarks with visual confirmation",Pass
+TC-APM-176,"Company Preparation","Verify company logo image loads with fallback","1. Open company with broken logo URL
+2. Check fallback","Placeholder avatar shown when company logo fails to load",Pass
+TC-APM-177,"Company Preparation","Verify company data loads from Render backend API","1. Load Companies
+2. Verify GET /api/companies called","Company data fetched from Render backend",Pass
+TC-APM-178,"Company Preparation","Verify share company URL button works","1. Open Company detail
+2. Tap Share
+3. Verify share sheet","Android share sheet opens with company URL",Pass
+TC-APM-179,"Company Preparation","Verify company external website link opens in browser","1. Open Company detail
+2. Tap external link
+3. Verify browser opens","Chrome/browser opens with company official website URL",Pass
+TC-APM-180,"Company Preparation","Verify ""Apply Now"" button links to correct application page","1. Open Company detail
+2. Tap ""Apply Now""
+3. Verify redirection","Browser opens with company careers/application page",Pass
+TC-APM-181,"Company Preparation","Verify company ratings breakdown displayed","1. Open Company detail
+2. Check ratings section","Star ratings shown with work-life balance, growth breakdown",Pass
+TC-APM-182,"Company Preparation","Verify sort options (A-Z, salary, rating) work correctly","1. Apply Sort by Rating
+2. Verify sorted list","Companies sorted by selected criteria",Pass
+TC-APM-183,"Company Preparation","Verify ""Clear All Filters"" button resets filters","1. Apply multiple filters
+2. Tap Clear All
+3. Verify reset","All filters cleared and full company list shown",Pass
+TC-APM-184,"Company Preparation","Verify pagination/load more on long company lists","1. Scroll to bottom of company list
+2. Verify ""Load More"" or pagination","""Load More"" button or infinite scroll loads next batch",Pass
+TC-APM-185,"Company Preparation","Verify error state on company API failure","1. Mock API failure for /api/companies
+2. Load Companies","Error message shown with Retry button on API failure",Pass
+TC-APM-186,"Company Preparation","Verify company card active job count badge correct","1. Load Companies
+2. Check active jobs badge on cards","Active job count shown on company cards matches API data",Pass
+TC-APM-070,"Dashboard","Verify Dashboard loads successfully after login","1. Login with valid credentials
+2. Verify Dashboard screen loads","Dashboard screen displayed with all widgets",Pass
+TC-APM-071,"Dashboard","Verify student statistics cards visible on Dashboard","1. Navigate to Dashboard
+2. Verify stats cards present","Statistics cards showing prepared topics, companies visited, bookmarks",Pass
+TC-APM-072,"Dashboard","Verify preparation progress bar renders correctly","1. Load Dashboard
+2. Check progress bar","Circular or linear progress bar showing completion %",Pass
+TC-APM-073,"Dashboard","Verify bookmarks shortcut panel visible on Dashboard","1. Load Dashboard
+2. Verify bookmarks section visible","Bookmarks shortcut panel with saved items visible",Pass
+TC-APM-074,"Dashboard","Verify recent activity section loads correctly","1. Load Dashboard
+2. Check recent activity list","Recent activity section shows last visited modules",Pass
+TC-APM-075,"Dashboard","Verify daily target widget shows correct task count","1. Load Dashboard
+2. Read daily target count","Daily target widget shows accurate pending task count",Pass
+TC-APM-076,"Dashboard","Verify dark/light mode toggle works on Dashboard","1. Tap theme toggle
+2. Verify theme changes","Dashboard theme switches between dark and light mode",Pass
+TC-APM-077,"Dashboard","Verify user profile name shown in Dashboard header","1. Load Dashboard
+2. Check header for username","Logged-in user name displayed in Dashboard header",Pass
+TC-APM-078,"Dashboard","Verify Dashboard loads API data within 5 seconds","1. Load Dashboard
+2. Wait for API data
+3. Measure time","All dashboard API calls complete within 5 seconds",Pass
+TC-APM-079,"Dashboard","Verify skeleton loaders shown during data fetch","1. Load Dashboard with slow network
+2. Verify skeleton loaders","Skeleton loaders visible during API fetch",Pass
+TC-APM-080,"Dashboard","Verify notifications badge count on Dashboard","1. Load Dashboard
+2. Check notification badge","Notification badge displays correct unread count",Pass
+TC-APM-081,"Dashboard","Verify Dashboard pull-to-refresh functionality","1. Load Dashboard
+2. Pull down to refresh
+3. Verify data reloads","Dashboard refreshes data on pull-to-refresh action",Pass
+TC-APM-082,"Dashboard","Verify sidebar/menu accessible from Dashboard","1. Tap hamburger/menu icon
+2. Verify sidebar opens","Side navigation menu opens from Dashboard",Pass
+TC-APM-083,"Dashboard","Verify empty state shown when no bookmarks exist","1. Clear all bookmarks
+2. Load Dashboard
+3. Check bookmark section","Empty state illustration shown in bookmarks panel",Pass
+TC-APM-084,"Dashboard","Verify target achieved animation plays on completion","1. Complete daily target
+2. Observe animation","Celebration/confetti animation plays on target completion",Pass
+TC-APM-085,"Dashboard","Verify Dashboard layout responsive to screen rotations","1. Load Dashboard
+2. Rotate to landscape
+3. Verify layout","Dashboard layout adapts correctly to landscape mode",Pass
+TC-APM-086,"Dashboard","Verify Quick Action buttons navigate to correct screens","1. Tap ""Prepare Now"" quick action
+2. Verify Preparation screen loads","Quick action buttons navigate to correct modules",Pass
+TC-APM-087,"Dashboard","Verify error state displayed on network failure","1. Disable network
+2. Load Dashboard
+3. Verify error state","Network error message with retry option shown",Pass
+TC-APM-088,"Dashboard","Verify keyboard shortcut toggles sidebar (accessibility)","1. Focus app
+2. Press keyboard shortcut for sidebar","Sidebar toggles via accessibility keyboard shortcut",Pass
+TC-APM-089,"Dashboard","Verify Dashboard data syncs with MongoDB on refresh","1. Update data on another device
+2. Refresh Dashboard
+3. Verify updated data","Dashboard reflects latest data from MongoDB Atlas",Pass
+TC-APM-090,"Dashboard","Verify bottom navigation bar visible on Dashboard","1. Load Dashboard
+2. Verify bottom nav bar","Bottom navigation bar with icons visible at bottom",Pass
+TC-APM-091,"Dashboard","Verify card hover/tap elevation effect on stats cards","1. Tap a stats card
+2. Observe elevation change","Card shows elevation/shadow effect on tap",Pass
+TC-APM-092,"Dashboard","Verify tooltip visible on tapping info icon on widgets","1. Tap info icon on a widget
+2. Verify tooltip","Tooltip with widget description appears on info icon tap",Pass
+TC-APM-093,"Dashboard","Verify auto-update interval polls API every 30 seconds","1. Load Dashboard
+2. Wait 30 seconds
+3. Verify data refresh","Dashboard auto-polls API every 30 seconds",Pass
+TC-APM-094,"Dashboard","Verify Dashboard accessible with screen reader (TalkBack)","1. Enable TalkBack
+2. Navigate Dashboard
+3. Verify all elements described","All Dashboard elements have accessibility descriptions",Pass
+TC-APM-095,"Bottom/Sidebar Navigation","Verify bottom navigation bar renders with 4+ icons","1. Load any main screen
+2. Check bottom nav bar","Bottom nav bar with Home, Prepare, Companies, Career icons",Pass
+TC-APM-096,"Bottom/Sidebar Navigation","Verify active nav item highlighted correctly","1. Navigate to each tab
+2. Check active state indicator","Active tab shows highlighted/colored icon and label",Pass
+TC-APM-097,"Bottom/Sidebar Navigation","Verify Home tab navigates to Dashboard","1. Tap Home icon in bottom nav
+2. Verify Dashboard loads","Dashboard screen loaded on Home tab tap",Pass
+TC-APM-098,"Bottom/Sidebar Navigation","Verify Preparation tab navigates to Preparation page","1. Tap Preparation icon
+2. Verify Preparation screen","Preparation module loaded on Prepare tab tap",Pass
+TC-APM-099,"Bottom/Sidebar Navigation","Verify Companies tab navigates to Company list","1. Tap Companies icon
+2. Verify Company list loads","Company list screen displayed on Companies tap",Pass
+TC-APM-100,"Bottom/Sidebar Navigation","Verify Career tab navigates to Career Tools","1. Tap Career icon
+2. Verify Career Tools loads","Career Tools screen displayed on Career tap",Pass
+TC-APM-101,"Bottom/Sidebar Navigation","Verify sidebar opens on hamburger menu tap","1. Tap hamburger icon
+2. Verify sidebar slides in","Sidebar navigation drawer opens with slide-in animation",Pass
+TC-APM-102,"Bottom/Sidebar Navigation","Verify sidebar closes on backdrop tap","1. Open sidebar
+2. Tap backdrop area
+3. Verify sidebar closes","Sidebar closes when backdrop outside is tapped",Pass
+TC-APM-103,"Bottom/Sidebar Navigation","Verify sidebar shows user profile info","1. Open sidebar
+2. Check user info section","Sidebar shows logged-in user name and email",Pass
+TC-APM-104,"Bottom/Sidebar Navigation","Verify sidebar navigation items match main tabs","1. Open sidebar
+2. Verify all navigation options match bottom nav","Sidebar mirrors bottom navigation items",Pass
+TC-APM-105,"Bottom/Sidebar Navigation","Verify swipe gesture opens/closes sidebar","1. Swipe right from left edge
+2. Verify sidebar opens","Sidebar opens on swipe-right gesture from left edge",Pass
+TC-APM-106,"Bottom/Sidebar Navigation","Verify bottom nav hidden during scroll on list screens","1. Scroll down on Company list
+2. Observe bottom nav","Bottom nav hides on scroll-down, shows on scroll-up",Pass
+TC-APM-107,"Bottom/Sidebar Navigation","Verify deep link routing opens correct screen","1. Open deep link placementpro://companies
+2. Verify Company screen","Deep link navigates directly to specified module",Pass
+TC-APM-108,"Bottom/Sidebar Navigation","Verify hardware back button behavior on main screens","1. Navigate to Dashboard
+2. Press hardware back","Exit confirmation dialog or app minimizes on back press",Pass
+TC-APM-109,"Bottom/Sidebar Navigation","Verify navigation transition animations smooth","1. Navigate between tabs
+2. Observe transition animation","Slide/fade transitions between screens are smooth (60fps)",Pass
+TC-APM-110,"Bottom/Sidebar Navigation","Verify breadcrumb/back navigation within nested screens","1. Navigate to Company > Company Detail
+2. Press back
+3. Verify Company list restored","Back navigation returns to previous screen in navigation stack",Pass
+TC-APM-111,"Bottom/Sidebar Navigation","Verify sidebar Settings option navigates to Settings","1. Open sidebar
+2. Tap Settings
+3. Verify Settings screen","Settings/Profile screen opens from sidebar",Pass
+TC-APM-112,"Bottom/Sidebar Navigation","Verify bottom nav icons have accessible content descriptions","1. Check bottom nav icons
+2. Verify content-desc attributes","Each bottom nav icon has accessible description for TalkBack",Pass
+TC-APM-113,"Bottom/Sidebar Navigation","Verify nav state preserved on orientation change","1. Navigate to Preparation
+2. Rotate screen
+3. Verify still on Preparation","Current navigation state preserved on orientation change",Pass
+TC-APM-114,"Bottom/Sidebar Navigation","Verify navigation does not cause memory leaks","1. Navigate through all tabs 10 times
+2. Check memory usage","Memory remains stable, no significant growth after navigation",Pass
+TC-APM-115,"Button Click Actions","Verify primary CTA button tap triggers correct action","1. Locate primary CTA
+2. Tap it
+3. Verify action triggered","Primary button triggers expected navigation or API action",Pass
+TC-APM-116,"Button Click Actions","Verify button shows loading state on tap","1. Tap action button
+2. Observe loading state","Button shows spinner/loading state during async action",Pass
+TC-APM-117,"Button Click Actions","Verify disabled button does not respond to tap","1. Locate disabled button
+2. Tap it
+3. Verify no action","Disabled button shows no visual feedback or action on tap",Pass
+TC-APM-118,"Button Click Actions","Verify button ripple/tap animation on Android","1. Tap any button
+2. Observe ripple effect","Android ripple animation visible on button tap",Pass
+TC-APM-119,"Button Click Actions","Verify ""Bookmark"" icon button toggles state correctly","1. Tap bookmark icon
+2. Verify filled state
+3. Tap again
+4. Verify unfilled","Bookmark icon toggles between saved and unsaved state",Pass
+TC-APM-120,"Button Click Actions","Verify ""Share"" button triggers Android share sheet","1. Tap Share button
+2. Verify Android share sheet opens","System share sheet displayed with sharing options",Pass
+TC-APM-121,"Button Click Actions","Verify FAB (Floating Action Button) visible and tappable","1. Navigate to eligible screen
+2. Tap FAB
+3. Verify action","FAB triggers correct action when tapped",Pass
+TC-APM-122,"Button Click Actions","Verify ""Retry"" button on error screen re-triggers API call","1. Cause network error
+2. Tap Retry
+3. Verify API call","Retry button re-initiates the failed API request",Pass
+TC-APM-123,"Button Click Actions","Verify button text renders correctly (no overflow)","1. Check all buttons
+2. Verify text fits within button bounds","All button labels visible without text overflow",Pass
+TC-APM-124,"Button Click Actions","Verify ""Close"" (X) button dismisses modals/sheets","1. Open a modal
+2. Tap X/Close button
+3. Verify modal closed","Modal dismissed when Close button tapped",Pass
+TC-APM-125,"Button Click Actions","Verify ""Back"" button in screen header returns to previous screen","1. Navigate to child screen
+2. Tap back arrow in header","Previous screen in stack displayed",Pass
+TC-APM-126,"Button Click Actions","Verify button minimum touch target size (48dp × 48dp)","1. Measure button touch areas
+2. Verify minimum 48dp","All interactive buttons meet 48dp × 48dp minimum touch area",Pass
+TC-APM-127,"Button Click Actions","Verify icon-only buttons have content descriptions","1. Check icon-only buttons
+2. Verify content-desc attribute","All icon-only buttons have descriptive content-desc for accessibility",Pass
+TC-APM-128,"Button Click Actions","Verify ""Filter"" button opens filter panel/sheet","1. Tap Filter button
+2. Verify filter options sheet opens","Filter sheet/drawer opens with available filter options",Pass
+TC_APP_PERF_001,"Performance","App launch time - Cold start","1. Kill app. 2. Launch app","App should load within 3 seconds",Pass
+TC_APP_PERF_002,"Performance","App launch time - Warm start","1. Background app. 2. Resume app","App should resume within 1 second",Pass
+TC_APP_PERF_003,"Performance","Dashboard loading time","1. Login. 2. Measure time to load dashboard data","Dashboard data should load within 2 seconds",Pass
+TC_APP_PERF_004,"Performance","List scrolling performance - Jobs","1. Go to Jobs. 2. Scroll rapidly through list","Scrolling should be smooth, 60fps, no stuttering",Pass
+TC_APP_PERF_005,"Performance","List scrolling performance - Companies","1. Go to Companies. 2. Scroll rapidly","Scrolling should be smooth without lag",Pass
+TC_APP_PERF_006,"Performance","Memory usage - Idle","1. Leave app idle on dashboard for 5 mins","Memory usage should remain stable, no leaks",Pass
+TC_APP_PERF_007,"Performance","Memory usage - Active navigation","1. Navigate through all bottom tabs continuously for 2 mins","Memory should not grow uncontrollably (no OOM)",Pass
+TC_APP_PERF_008,"Performance","Battery consumption","1. Run automated test suite for 10 mins","Battery drain should be within acceptable limits (< 5%)",Pass
+TC_APP_PERF_009,"Performance","Network data usage","1. Monitor data transferred during typical session","Data usage optimized, minimal background data",Pass
+TC_APP_PERF_010,"Performance","Image loading performance","1. Go to Companies. 2. Measure logo load times","Images should load quickly and be cached for reuse",Pass
+TC_APP_UI_001,"UI Consistency","Font styles consistency","1. Check headings and body text across screens","Font families and sizes match design system",Pass
+TC_APP_UI_002,"UI Consistency","Color palette consistency","1. Check primary buttons, backgrounds, text colors","Colors match brand guidelines exactly",Pass
+TC_APP_UI_003,"UI Consistency","Button sizing and padding","1. Inspect various buttons across app","Consistent touch targets (min 44x44pt)",Pass
+TC_APP_UI_004,"UI Consistency","Screen transitions","1. Navigate between screens","Transitions should use standard slide/fade animations",Pass
+TC_APP_UI_005,"UI Consistency","Loading indicators","1. Trigger API call (e.g., pull to refresh)","Standard spinner or skeleton loader is shown",Pass
+TC_APP_UI_006,"UI Consistency","Error message styling","1. Trigger error (e.g., invalid login)","Error toasts/snackbars use consistent red styling",Pass
+TC_APP_UI_007,"UI Consistency","Success message styling","1. Trigger success (e.g., save profile)","Success messages use consistent green styling",Pass
+TC_APP_UI_008,"UI Consistency","Empty state views","1. Go to Bookmarks with no bookmarks","Friendly empty state illustration and text displayed",Pass
+TC_APP_UI_009,"UI Consistency","Dark mode - UI check","1. Enable dark mode. 2. Check various screens","Text is legible, contrasts are sufficient, no white flashes",Pass
+TC_APP_UI_010,"UI Consistency","Landscape orientation support","1. Rotate device to landscape","UI should adapt gracefully or restrict to portrait if intended",Pass
+TC_APP_ACC_001,"Accessibility","Screen reader support - Login","1. Enable VoiceOver/TalkBack. 2. Focus on login inputs","Labels and hints read correctly",Pass
+TC_APP_ACC_002,"Accessibility","Screen reader support - Dashboard","1. Enable screen reader. 2. Navigate dashboard tabs","Tab names and selection states read correctly",Pass
+TC_APP_ACC_003,"Accessibility","Image alt text","1. Focus screen reader on company logos or profile avatar","Descriptive alt text read (e.g., 'Company Logo', 'Profile Picture')",Pass
+TC_APP_ACC_004,"Accessibility","Dynamic type/Large text support","1. Increase system font size to max","Text scales up, UI doesn't break or overlap",Pass
+TC_APP_ACC_005,"Accessibility","Color contrast ratio","1. Analyze text over backgrounds","Contrast ratio meets WCAG AA standards (4.5:1)",Pass
+TC_APP_ACC_006,"Accessibility","Touch target sizes","1. Inspect interactive elements","All interactive elements are at least 48x48 dp",Pass
+TC_APP_ACC_007,"Accessibility","Keyboard navigation","1. Connect external keyboard. 2. Use Tab/Enter","Can navigate and activate elements sequentially",Pass
+TC_APP_ACC_008,"Accessibility","Focus indicators","1. Use keyboard navigation","Visible focus ring on currently focused element",Pass
+TC_APP_ACC_009,"Accessibility","Form error announcements","1. Submit invalid form with screen reader active","Error messages are announced immediately",Pass
+TC_APP_ACC_010,"Accessibility","Reduced motion preference","1. Enable 'Reduce Motion' in system. 2. Navigate app","Animations are minimized or replaced with crossfades",Pass
+TC_APP_INT_001,"Interruptions","Incoming call during test","1. Start taking a mock test. 2. Receive phone call","Test pauses automatically, resumes when call ends",Pass
+TC_APP_INT_002,"Interruptions","SMS/Notification overlay","1. View video lecture. 2. Receive notification","Video continues playing, app remains stable",Pass
+TC_APP_INT_003,"Interruptions","App minimized by home button","1. Fill out form. 2. Press home. 3. Re-open app","Form data is retained, state is preserved",Pass
+TC_APP_INT_004,"Interruptions","OS Low Battery warning","1. Trigger low battery intent","App handles system dialog without crashing",Pass
+TC_APP_INT_005,"Interruptions","Change device language","1. Change system language. 2. Return to app","App reloads strings or prompts for restart if localization supported",Pass
+TC-APM-129,"Preparation Page","Verify Preparation page loads with topic categories","1. Navigate to Preparation
+2. Verify topic list","Preparation page shows topic categories (DSA, DBMS, OS, Networks)",Pass
+TC-APM-130,"Preparation Page","Verify topic cards display title and progress","1. Load Preparation
+2. Check each topic card","Topic cards show title, description, and completion percentage",Pass
+TC-APM-131,"Preparation Page","Verify tapping a topic card opens that topic","1. Tap ""DSA"" topic card
+2. Verify DSA screen loads","Topic detail screen opens on card tap",Pass
+TC-APM-132,"Preparation Page","Verify overall preparation progress widget accuracy","1. Load Preparation
+2. Check overall progress indicator","Overall progress matches average of all topic completions",Pass
+TC-APM-133,"Preparation Page","Verify preparation categories are filterable","1. Apply ""Core CS"" filter
+2. Verify filtered topics shown","Only Core CS topics displayed after filter applied",Pass
+TC-APM-134,"Preparation Page","Verify search bar finds topics by keyword","1. Tap search
+2. Type ""Array""
+3. Verify results","Search results show topics matching ""Array""",Pass
+TC-APM-135,"Preparation Page","Verify bookmarked topics marked with bookmark icon","1. Bookmark a topic
+2. Reload Preparation
+3. Verify bookmark shown","Bookmarked topics show filled bookmark icon",Pass
+TC-APM-136,"Preparation Page","Verify completed topics shown with checkmark","1. Complete a topic
+2. Check Preparation list
+3. Verify checkmark","Completed topics show green checkmark badge",Pass
+TC-APM-137,"Preparation Page","Verify preparation data loads from Render backend","1. Load Preparation
+2. Verify API call to /api/preparation","Preparation data fetched from Render backend API",Pass
+TC-APM-138,"Preparation Page","Verify pull-to-refresh reloads preparation data","1. Pull down on Preparation
+2. Verify data refreshes","Preparation list refreshes on pull-to-refresh",Pass
+TC-APM-139,"Preparation Page","Verify empty state shown if no topics available","1. Mock empty topics API
+2. Load Preparation","Empty state illustration shown with ""No topics found""",Pass
+TC-APM-140,"Preparation Page","Verify preparation screen scrollable with large topic list","1. Load Preparation with 20+ topics
+2. Scroll to bottom","All topics accessible via scroll",Pass
+TC-APM-141,"Preparation Page","Verify layout adapts to landscape orientation","1. Rotate to landscape
+2. Check Preparation layout","Grid layout adapts to landscape without UI overflow",Pass
+TC-APM-142,"Preparation Page","Verify skeleton loaders shown on initial data fetch","1. Clear cache
+2. Load Preparation
+3. Observe skeleton","Skeleton cards visible during initial data fetch",Pass
+TC-APM-143,"Preparation Page","Verify ""Start Quiz"" button available from preparation topic","1. Open a topic
+2. Locate Start Quiz button","""Start Quiz"" button visible and tappable in topic detail",Pass
+TC-APM-144,"Preparation Page","Verify topic difficulty level labels displayed","1. Load Preparation
+2. Check difficulty labels","Each topic shows difficulty level (Easy/Medium/Hard)",Pass
+TC-APM-145,"Preparation Page","Verify time estimate shown per topic","1. Load Preparation
+2. Check time estimate on cards","Each topic shows estimated study time (e.g., ""2 hours"")",Pass
+TC-APM-146,"Preparation Page","Verify preparation topic order (recommended first)","1. Load Preparation
+2. Verify recommended topics at top","Recommended/priority topics shown at top of list",Pass
+TC-APM-147,"Preparation Page","Verify offline cached topics accessible without network","1. Load topics with network
+2. Disable network
+3. Reload
+4. Verify cached data","Previously loaded topics accessible from cache offline",Pass
+TC-APM-148,"Preparation Page","Verify focus ring visible for accessibility navigation","1. Navigate with keyboard/TalkBack
+2. Check focus indicators","Focus ring visible on all interactive elements",Pass
+TC-APM-149,"Topics Preparation","Verify DSA topic contains subtopics (Arrays, Sorting, etc.)","1. Open DSA topic
+2. Verify subtopic list","DSA subtopics: Arrays, Linked Lists, Sorting, Trees visible",Pass
+TC-APM-150,"Topics Preparation","Verify DBMS topic content loads correctly","1. Open DBMS topic
+2. Verify content sections","DBMS content: Normalization, SQL, Transactions sections visible",Pass
+TC-APM-151,"Topics Preparation","Verify OS topic content loads correctly","1. Open OS topic
+2. Verify content sections","OS content: Processes, Memory, Scheduling sections visible",Pass
+TC-APM-152,"Topics Preparation","Verify Networks topic content loads correctly","1. Open Networks topic
+2. Verify content sections","Networks content: TCP/IP, OSI, HTTP sections visible",Pass
+TC-APM-153,"Topics Preparation","Verify subtopic completion toggle works correctly","1. Open a subtopic
+2. Mark as complete
+3. Verify checkmark","Subtopic marked with checkmark after completion toggle",Pass
+TC-APM-154,"Topics Preparation","Verify topic notes section editable by user","1. Open a topic
+2. Tap Notes area
+3. Enter text","User can type and save personal notes in topic",Pass
+TC-APM-155,"Topics Preparation","Verify topic notes auto-save on text entry","1. Enter notes
+2. Navigate away
+3. Return
+4. Verify notes saved","Notes persist after navigating away and returning",Pass
+TC-APM-156,"Topics Preparation","Verify ""Quick Quiz"" starts with topic-specific questions","1. Open a topic
+2. Tap Quick Quiz
+3. Verify questions are topic-relevant","Quiz questions match the selected topic domain",Pass
+TC-APM-157,"Topics Preparation","Verify topic reading progress tracks correctly","1. Scroll through topic content
+2. Check progress bar","Reading progress bar reflects scroll position in content",Pass
+TC-APM-158,"Topics Preparation","Verify code snippets in topics are syntax highlighted","1. Open a topic with code
+2. Verify syntax colors","Code blocks show syntax highlighting",Pass
+TC-APM-159,"Topics Preparation","Verify code snippet copy button works","1. Tap Copy on a code block
+2. Paste in clipboard","Code copied to clipboard on Copy button tap",Pass
+TC-APM-160,"Topics Preparation","Verify topic title correct in screen header","1. Open a topic
+2. Verify header title","Screen header shows correct topic name",Pass
+TC-APM-161,"Topics Preparation","Verify ""Previous"" and ""Next"" navigation between subtopics","1. Open subtopic
+2. Tap Next
+3. Verify next subtopic","Next/Previous navigation moves between sequential subtopics",Pass
+TC-APM-162,"Topics Preparation","Verify topic font size adjustable in settings","1. Change font size in settings
+2. Open topic
+3. Verify size change","Topic content font size adjusts based on user settings",Pass
+TC-APM-163,"Topics Preparation","Verify images in topics load with proper alt text","1. Open topic with images
+2. Verify alt text present","Topic images have descriptive alt text for accessibility",Pass
+TC-APM-164,"Topics Preparation","Verify topic bookmark persists across sessions","1. Bookmark a topic
+2. Kill and reopen app
+3. Verify still bookmarked","Topic bookmark persists across app restarts",Pass
+TC-APM-165,"Topics Preparation","Verify ""Mark All Complete"" button marks all subtopics","1. Open topic
+2. Tap ""Mark All Complete""
+3. Verify all checked","All subtopics marked as complete simultaneously",Pass
+TC-APM-166,"Topics Preparation","Verify topic last accessed date shown correctly","1. Open a topic
+2. Navigate away
+3. Return to list
+4. Check last accessed","Topic card shows ""Last accessed: today"" or correct date",Pass
+TC_APP_PRO_001,"Profile Management","Navigate to profile screen from dashboard","1. Login. 2. Tap on profile icon or tab","Profile screen should load successfully",Pass
+TC_APP_PRO_002,"Profile Management","Verify UI elements on profile screen","1. Navigate to Profile","Name, email, avatar, edit button should be visible",Pass
+TC_APP_PRO_003,"Profile Management","Edit profile - valid data","1. Tap Edit. 2. Update name and phone. 3. Save","Profile should update and show success message",Pass
+TC_APP_PRO_004,"Profile Management","Edit profile - invalid phone number","1. Tap Edit. 2. Enter invalid phone. 3. Save","Error message 'Invalid phone number format'",Pass
+TC_APP_PRO_005,"Profile Management","Edit profile - empty name","1. Tap Edit. 2. Clear name field. 3. Save","Error message 'Name is required'",Pass
+TC_APP_PRO_006,"Profile Management","Cancel profile edit","1. Tap Edit. 2. Change name. 3. Tap Cancel","Changes should be discarded, profile remains unchanged",Pass
+TC_APP_PRO_007,"Profile Management","Upload profile picture - gallery","1. Tap avatar. 2. Choose from gallery. 3. Select image","Profile picture should update",Pass
+TC_APP_PRO_008,"Profile Management","Upload profile picture - camera","1. Tap avatar. 2. Take photo. 3. Capture and accept","Profile picture should update",Pass
+TC_APP_PRO_009,"Profile Management","Upload profile picture - size limit","1. Tap avatar. 2. Select image > 5MB","Error message 'Image size exceeds 5MB limit'",Pass
+TC_APP_PRO_010,"Profile Management","Remove profile picture","1. Tap avatar. 2. Select Remove photo","Avatar should revert to default placeholder",Pass
+TC_APP_PRO_011,"Profile Management","Change password - successful","1. Tap Change Password. 2. Enter current, new, confirm. 3. Save","Password changes successfully, success message shown",Pass
+TC_APP_PRO_012,"Profile Management","Change password - incorrect current password","1. Tap Change Password. 2. Enter wrong current password. 3. Save","Error 'Incorrect current password'",Pass
+TC_APP_PRO_013,"Profile Management","Change password - mismatch","1. Tap Change Password. 2. New and confirm passwords differ","Error 'Passwords do not match'",Pass
+TC_APP_PRO_014,"Profile Management","Change password - weak password","1. Tap Change Password. 2. Enter weak new password (e.g., '123')","Error 'Password too weak'",Pass
+TC_APP_PRO_015,"Profile Management","Update academic details","1. Navigate to Academic Section. 2. Update CGPA. 3. Save","Academic details updated successfully",Pass
+TC_APP_PRO_016,"Profile Management","Update skills","1. Navigate to Skills section. 2. Add new skill. 3. Save","New skill added to profile",Pass
+TC_APP_PRO_017,"Profile Management","Remove skill","1. Navigate to Skills section. 2. Tap delete icon on skill","Skill removed from profile",Pass
+TC_APP_PRO_018,"Profile Management","Upload resume - PDF","1. Tap Upload Resume. 2. Select PDF file","Resume uploaded successfully",Pass
+TC_APP_PRO_019,"Profile Management","Upload resume - invalid format","1. Tap Upload Resume. 2. Select image file","Error 'Only PDF/DOCX formats allowed'",Pass
+TC_APP_PRO_020,"Profile Management","Delete resume","1. Tap delete icon next to resume","Resume deleted, prompt to upload new one",Pass
+TC_APP_SET_001,"Settings","Navigate to Settings","1. Go to Profile. 2. Tap Settings gear icon","Settings screen loaded",Pass
+TC_APP_SET_002,"Settings","Toggle push notifications","1. In Settings, toggle Push Notifications","Toggle state changes and saves",Pass
+TC_APP_SET_003,"Settings","Toggle email notifications","1. In Settings, toggle Email Notifications","Toggle state changes and saves",Pass
+TC_APP_SET_004,"Settings","Change theme - Dark Mode","1. In Settings, select Theme -> Dark Mode","App theme immediately changes to dark",Pass
+TC_APP_SET_005,"Settings","Change theme - Light Mode","1. In Settings, select Theme -> Light Mode","App theme immediately changes to light",Pass
+TC_APP_SET_006,"Settings","Change theme - System Default","1. In Settings, select Theme -> System Default","App theme matches system theme",Pass
+TC_APP_SET_007,"Settings","Clear app cache","1. In Settings, tap Clear Cache. 2. Confirm","Success message 'Cache cleared'",Pass
+TC_APP_SET_008,"Settings","View Privacy Policy","1. In Settings, tap Privacy Policy","Privacy policy webview or screen opens",Pass
+TC_APP_SET_009,"Settings","View Terms of Service","1. In Settings, tap Terms of Service","Terms of service webview or screen opens",Pass
+TC_APP_SET_010,"Settings","About App section","1. In Settings, tap About","App version and developer info displayed",Pass
+TC_APP_SET_011,"Settings","Check for updates","1. In About, tap Check for Updates","Shows 'App is up to date' or update prompt",Pass
+TC_APP_SET_012,"Settings","Contact Support","1. In Settings, tap Contact Support. 2. Fill form. 3. Send","Support request sent successfully",Pass
+TC_APP_SET_013,"Settings","Delete Account request","1. In Settings, tap Delete Account. 2. Confirm","Warning prompt appears",Pass
+TC_APP_SET_014,"Settings","Cancel Delete Account","1. Tap Delete Account. 2. Tap Cancel on prompt","Dialog closes, account not deleted",Pass
+TC_APP_SET_015,"Settings","Logout from Settings","1. Scroll to bottom of Settings. 2. Tap Logout. 3. Confirm","User logged out, routed to login screen",Pass
