@@ -235,38 +235,6 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// --- ADMIN MIGRATION ROUTES ---
-app.post("/api/admin/fix-sync-fields", async (req, res) => {
-    try {
-        const results = {};
-
-        const resTC = await User.updateMany({ targetCompanies: { $exists: false } }, { $set: { targetCompanies: [] } });
-        results.targetCompanies = resTC.modifiedCount;
-
-        const resDT = await User.updateMany({ dailyTasks: { $exists: false } }, { $set: { dailyTasks: {} } });
-        results.dailyTasks = resDT.modifiedCount;
-
-        const resBM = await User.updateMany({ bookmarks: { $exists: false } }, { $set: { bookmarks: {} } });
-        results.bookmarks = resBM.modifiedCount;
-
-        const resPP = await User.updateMany({ prepProgress: { $exists: false } }, { $set: { prepProgress: {} } });
-        results.prepProgress = resPP.modifiedCount;
-
-        const resCP = await User.updateMany({ codingProgress: { $exists: false } }, { $set: { codingProgress: {} } });
-        results.codingProgress = resCP.modifiedCount;
-
-        const resSE = await User.updateMany({ scheduleEvents: { $exists: false } }, { $set: { scheduleEvents: {} } });
-        results.scheduleEvents = resSE.modifiedCount;
-
-        res.status(200).json({ 
-            success: true, 
-            message: "Migration complete.",
-            modifiedCounts: results
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
 
 // --- SYNC API ENDPOINTS ---
 
