@@ -47,6 +47,7 @@ const UserProfile = () => {
   const [tempPhone, setTempPhone] = useState(phone);
   
   const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message: string }
   const [isVerifying, setIsVerifying] = useState(false);
   
   // OTP Modal State
@@ -235,89 +236,74 @@ const UserProfile = () => {
     }
   };
 
+  // Toast helper
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result;
-        setProfilePic(base64String);
-        localStorage.setItem('profilePic', base64String);
-        window.dispatchEvent(new Event('profilePicUpdated'));
-        
-        const token = localStorage.getItem('token');
-        if (token) {
-          try {
-            await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ profilePic: base64String })
-            });
-          } catch(err) {
-            console.error("Failed to sync profile pic", err);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file size (limit to 2MB to stay within MongoDB doc limits)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('error', 'Photo too large. Please choose an image under 2MB.');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result;
+      setProfilePic(base64String);
+      localStorage.setItem('profilePic', base64String);
+      window.dispatchEvent(new Event('profilePicUpdated'));
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ profilePic: base64String })
+          });
+          const result = await res.json();
+          if (result.success) {
+            showToast('success', 'Profile photo saved successfully!');
+          } else {
+            showToast('error', `Photo saved locally. Sync error: ${result.message}`);
+          }
+        } catch (err) {
+          console.error('Failed to sync profile pic', err);
+          showToast('error', 'Photo saved locally. Could not reach the server.');
+        }
+      } else {
+        showToast('success', 'Profile photo updated locally!');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePersonalSave = async () => {
     if (tempEmail !== email || tempPhone !== phone) {
       setShowOtpModal(true);
     } else {
+      // Update local state
       setFirstName(tempFirstName);
       setLastName(tempLastName);
       localStorage.setItem('firstName', tempFirstName);
       localStorage.setItem('lastName', tempLastName);
+      localStorage.setItem('userName', `${tempFirstName} ${tempLastName}`.trim());
       window.dispatchEvent(new Event('profilePicUpdated'));
-      
+
       const token = localStorage.getItem('token');
       if (token) {
         setIsSaving(true);
         try {
-          await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ name: `${tempFirstName} ${tempLastName}`.trim() })
-          });
-          alert('Profile updated successfully!');
-        } catch (err) {
-          console.error(err);
-          alert('Profile updated locally, but failed to sync.');
-        } finally {
-          setIsSaving(false);
-        }
-      } else {
-        alert('Profile updated successfully!');
-      }
-    }
-  };
-
-  const handleOtpVerify = async () => {
-    if (otp.join('').length === 4) {
-      setFirstName(tempFirstName);
-      setLastName(tempLastName);
-      setEmail(tempEmail);
-      setPhone(tempPhone);
-      
-      localStorage.setItem('firstName', tempFirstName);
-      localStorage.setItem('lastName', tempLastName);
-      localStorage.setItem('email', tempEmail);
-      localStorage.setItem('phone', tempPhone);
-      window.dispatchEvent(new Event('profilePicUpdated'));
-
-      const token = localStorage.getItem('token');
-      if (token) {
-        setIsVerifying(true);
-        try {
-          await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
+          const res = await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -328,32 +314,91 @@ const UserProfile = () => {
               phone: tempPhone
             })
           });
+          const result = await res.json();
+          if (result.success) {
+            showToast('success', 'Personal info saved successfully!');
+          } else {
+            showToast('error', `Saved locally. Sync error: ${result.message}`);
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('error', 'Saved locally. Could not reach the server.');
+        } finally {
+          setIsSaving(false);
+        }
+      } else {
+        showToast('success', 'Personal info saved locally!');
+      }
+    }
+  };
+
+  const handleOtpVerify = async () => {
+    if (otp.join('').length === 4) {
+      // Update local state
+      setFirstName(tempFirstName);
+      setLastName(tempLastName);
+      setEmail(tempEmail);
+      setPhone(tempPhone);
+
+      localStorage.setItem('firstName', tempFirstName);
+      localStorage.setItem('lastName', tempLastName);
+      localStorage.setItem('email', tempEmail);
+      localStorage.setItem('phone', tempPhone);
+      localStorage.setItem('userName', `${tempFirstName} ${tempLastName}`.trim());
+      window.dispatchEvent(new Event('profilePicUpdated'));
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        setIsVerifying(true);
+        try {
+          const res = await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name: `${tempFirstName} ${tempLastName}`.trim(),
+              phone: tempPhone
+            })
+          });
+          const result = await res.json();
           setShowOtpModal(false);
           setOtp(['', '', '', '']);
-          alert('Profile details updated successfully!');
+          if (result.success) {
+            showToast('success', 'Profile details updated successfully!');
+          } else {
+            showToast('error', `Saved locally. Sync error: ${result.message}`);
+          }
         } catch (err) {
           console.error(err);
           setShowOtpModal(false);
           setOtp(['', '', '', '']);
-          alert('Profile updated locally, but failed to sync.');
+          showToast('error', 'Saved locally. Could not reach the server.');
         } finally {
           setIsVerifying(false);
         }
       } else {
         setShowOtpModal(false);
         setOtp(['', '', '', '']);
-        alert('Profile details updated successfully!');
+        showToast('success', 'Profile details updated locally!');
       }
     } else {
-      alert('Please enter a 4-digit OTP.');
+      showToast('error', 'Please enter a valid 4-digit OTP.');
     }
   };
 
   const handleAcademicSave = async () => {
+    // Always save to localStorage first
+    localStorage.setItem('college', college);
+    localStorage.setItem('department', department);
+    localStorage.setItem('year', String(year));
+    localStorage.setItem('cgpa', String(cgpa));
+
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
+        const res = await syncFetch(`${API_BASE_URL}/api/sync/profile`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -366,13 +411,18 @@ const UserProfile = () => {
             cgpa: Number(cgpa)
           })
         });
-        alert('Academic details updated successfully!');
+        const result = await res.json();
+        if (result.success) {
+          showToast('success', 'Academic details saved successfully!');
+        } else {
+          showToast('error', `Saved locally. Sync error: ${result.message}`);
+        }
       } catch (err) {
         console.error('Failed to sync academic info:', err);
-        alert('Academic details updated locally, but failed to sync.');
+        showToast('error', 'Saved locally. Could not reach the server.');
       }
     } else {
-      alert('Academic details updated locally!');
+      showToast('success', 'Academic details saved locally!');
     }
   };
 
@@ -390,6 +440,32 @@ const UserProfile = () => {
 
   return (
     <div className="page-container relative">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            right: '2rem',
+            zIndex: 9999,
+            padding: '0.85rem 1.4rem',
+            borderRadius: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
+            background: toast.type === 'success' ? 'linear-gradient(135deg, #1a6b3c, #22c55e)' : 'linear-gradient(135deg, #7f1d1d, #ef4444)',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '0.9rem',
+            minWidth: '260px',
+            animation: 'fadeInUp 0.3s ease'
+          }}
+        >
+          <span style={{ fontSize: '1.1rem' }}>{toast.type === 'success' ? '✅' : '❌'}</span>
+          {toast.message}
+        </div>
+      )}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-textMain mb-2">Profile & Settings</h1>
         <p className="text-secondary text-lg">Manage your account and update preferences.</p>

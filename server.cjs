@@ -82,7 +82,10 @@ const authenticateToken = (req, res, next) => {
 };
 
 app.use(cors());
-app.use(express.json());
+// 1. Increase Express request size limits (Fix for PayloadTooLargeError)
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
 app.use("/uploads", express.static("uploads"));
 
 const storage = multer.diskStorage({
@@ -99,7 +102,9 @@ const connectDB = async () => {
         console.log("MongoDB connected");
     } catch (error) {
         console.log("MongoDB connection failed:", error.message);
-        process.exit(1);
+        console.log("WARNING: Server running without database. API endpoints will not work.");
+        console.log("Fix: Whitelist your IP in MongoDB Atlas > Network Access, or check your internet connection.");
+        // DO NOT call process.exit(1) — let server keep running so frontend can still load
     }
 };
 
@@ -271,14 +276,51 @@ app.get("/api/sync/all", authenticateToken, async (req, res) => {
 
 app.patch("/api/sync/profile", authenticateToken, async (req, res) => {
     try {
-        const { targetCompanies } = req.body;
+        const { name, phone, profilePic, college, department, year, cgpa, skills, targetCompanies } = req.body;
         const updateData = {};
+
+        // Only update fields that are actually provided in the request body
+        if (name !== undefined) updateData.name = name;
+        if (phone !== undefined) updateData.phone = phone;
+        if (college !== undefined) updateData.college = college;
+        if (department !== undefined) updateData.department = department;
+        if (year !== undefined) updateData.year = Number(year);
+        if (cgpa !== undefined) updateData.cgpa = Number(cgpa);
+        if (skills !== undefined) updateData.skills = skills;
         if (targetCompanies !== undefined) updateData.targetCompanies = targetCompanies;
-        
-        const user = await User.findByIdAndUpdate(req.userId, updateData, { new: true });
+
+        // Handle profilePic — store base64 string directly in DB
+        if (profilePic !== undefined) {
+            updateData.profilePic = profilePic;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ success: false, message: "No fields provided to update" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.userId,
+            { $set: updateData },
+            { new: true }
+        ).select("-password");
+
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-        res.status(200).json({ success: true, data: user });
+        // Emit real-time update to all connected clients of this user
+        const profileData = {
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            profilePic: user.profilePic,
+            college: user.college,
+            department: user.department,
+            year: user.year,
+            cgpa: user.cgpa,
+            skills: user.skills
+        };
+        emitToUser(req.userId, "profileUpdated", profileData);
+
+        res.status(200).json({ success: true, data: profileData });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -1370,6 +1412,17 @@ app.patch("/api/sync/bookmarks", authenticateToken, async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+});
+
+// 4. Add proper error handling for oversized requests
+app.use((err, req, res, next) => {
+    if (err.type === 'entity.too.large') {
+        return res.status(413).json({
+            success: false,
+            message: "Uploaded data exceeds allowed size."
+        });
+    }
+    next(err);
 });
 
 server.listen(5000, "0.0.0.0", () => {
