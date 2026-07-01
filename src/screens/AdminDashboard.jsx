@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, User, BarChart3, PieChart, Bookmark, Activity, LogOut,
-  Search, Filter, X, ChevronRight, CheckCircle, Clock, Calendar, Mail, GraduationCap, Building2, TrendingUp, AlertCircle, Shield, ShieldOff, Megaphone, Send, Database
+  Search, Filter, X, ChevronRight, CheckCircle, Clock, Calendar, Mail, GraduationCap, Building2, TrendingUp, AlertCircle, Shield, ShieldOff, Megaphone, Send, Database, Menu
 } from 'lucide-react';
 import DataManagementTab from './DataManagementTab';
 import { API_BASE_URL } from '../assets/api';
@@ -12,6 +12,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Data States
   const [dashboardData, setDashboardData] = useState(null);
@@ -660,8 +661,21 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-screen bg-bgMain text-textMain overflow-hidden">
       
-      {/* Sidebar - hidden on mobile, visible on medium+ screens */}
-      <aside className="hidden md:flex w-64 bg-card border-r border-border shrink-0 flex-col h-full z-10 relative">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-64 bg-card border-r border-border shrink-0 flex flex-col h-full 
+        transform transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-bold bg-gradient-primary text-transparent bg-clip-text">Admin Panel</h1>
           <p className="text-xs text-secondary mt-1">Placement Dashboard</p>
@@ -680,7 +694,7 @@ const AdminDashboard = () => {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
                 activeTab === item.id ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm' : 'text-secondary hover:bg-border/50 hover:text-textMain'
               }`}
@@ -702,7 +716,13 @@ const AdminDashboard = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden relative bg-bgMain">
-        <header className="h-16 border-b border-border flex items-center px-8 shrink-0 bg-card/50 backdrop-blur-sm z-10">
+        <header className="h-16 border-b border-border flex items-center px-4 md:px-8 shrink-0 bg-card/50 backdrop-blur-sm z-10 gap-4">
+          <button 
+            className="md:hidden p-2 rounded-lg text-secondary hover:bg-border transition"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={24} />
+          </button>
           <div className="text-sm text-secondary font-medium uppercase tracking-wider">
             {activeTab.replace('-', ' ')}
           </div>
@@ -730,22 +750,6 @@ const AdminDashboard = () => {
           {activeTab === 'activity' && renderActivity()}
           {activeTab === 'announcements' && renderAnnouncements()}
 
-        </div>
-
-        {/* Mobile Navigation for Admin */}
-        <div className="md:hidden flex justify-around items-center bg-card border-t border-border p-2 shrink-0 z-20">
-          <button onClick={() => setActiveTab('dashboard')} className={`p-3 rounded-xl ${activeTab === 'dashboard' ? 'text-primary bg-primary/10' : 'text-secondary'}`}>
-            <LayoutDashboard size={24} />
-          </button>
-          <button onClick={() => setActiveTab('data-management')} className={`p-3 rounded-xl ${activeTab === 'data-management' ? 'text-primary bg-primary/10' : 'text-secondary'}`}>
-            <Database size={24} />
-          </button>
-          <button onClick={() => setActiveTab('users')} className={`p-3 rounded-xl ${activeTab === 'users' ? 'text-primary bg-primary/10' : 'text-secondary'}`}>
-            <Users size={24} />
-          </button>
-          <button onClick={() => setActiveTab('announcements')} className={`p-3 rounded-xl ${activeTab === 'announcements' ? 'text-primary bg-primary/10' : 'text-secondary'}`}>
-            <Megaphone size={24} />
-          </button>
         </div>
       </main>
 
