@@ -138,10 +138,10 @@ async function generateExcel() {
   headerRow.height = 30;
 
   // 2. Data Row Styling & Borders
-  worksheet.eachRow({ includeHeader: false }, function(row, rowNumber) {
+  worksheet.eachRow({ includeHeader: false }, function (row, rowNumber) {
     row.font = { name: 'Segoe UI', size: 10 };
     row.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
-    
+
     // Zebra striping for readability
     if (rowNumber % 2 === 0) {
       row.fill = {
@@ -158,19 +158,19 @@ async function generateExcel() {
     }
 
     // Border styling
-    row.eachCell({ includeEmpty: true }, function(cell) {
+    row.eachCell({ includeEmpty: true }, function (cell) {
       cell.border = {
         top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
         left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
         bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
         right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
       };
-      
+
       // Right align S.No column
       if (cell.col === 1) {
         cell.alignment = { vertical: 'top', horizontal: 'center' };
       }
-      
+
       // Make company names bold and distinct
       if (cell.col === 2) {
         cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1F4E78' } };
@@ -179,7 +179,7 @@ async function generateExcel() {
 
     // Auto-adjust row height based on content wrapping
     let maxLines = 1;
-    row.eachCell(function(cell) {
+    row.eachCell(function (cell) {
       if (typeof cell.value === 'string') {
         const lines = cell.value.split('\n').length;
         const colWidth = worksheet.getColumn(cell.col).width || 10;

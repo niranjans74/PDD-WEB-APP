@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
     default: "student"
   },
 
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+
   phone: {
     type: String,
     default: ""

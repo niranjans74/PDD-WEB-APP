@@ -314,8 +314,9 @@ export const companiesData = [
 
 const CodingDashboard = () => {
   const userName = localStorage.getItem('userName') || 'John';
-  const [filteredCompaniesData, setFilteredCompaniesData] = useState(companiesData);
-  const [activeCompanyObj, setActiveCompanyObj] = useState(companiesData[0]);
+  const [dynamicCompaniesData, setDynamicCompaniesData] = useState(companiesData);
+  const [filteredCompaniesData, setFilteredCompaniesData] = useState([]);
+  const [activeCompanyObj, setActiveCompanyObj] = useState(null);
   const [completedTopics, setCompletedTopics] = useState(() => {
     try {
       const saved = localStorage.getItem('codingProgress');
@@ -459,7 +460,7 @@ const CodingDashboard = () => {
       }
       
       if (targets.length > 0) {
-        const filtered = companiesData.filter(c => targets.includes(c.name));
+        const filtered = dynamicCompaniesData.filter(c => targets.includes(c.name));
         if (filtered.length > 0) {
           setFilteredCompaniesData(filtered);
           setActiveCompanyObj(prev => {
@@ -473,10 +474,26 @@ const CodingDashboard = () => {
         setFilteredCompaniesData([]);
       }
     };
+
+    // Also fetch dynamic companies
+    const fetchDynamicCompanies = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/api/data/companies`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setDynamicCompaniesData(data.data);
+        }
+      } catch (err) {}
+    };
+
+    fetchDynamicCompanies();
     loadTargets();
     window.addEventListener('targetCompaniesUpdated', loadTargets);
     return () => window.removeEventListener('targetCompaniesUpdated', loadTargets);
-  }, []);
+  }, [dynamicCompaniesData.length]);
 
   const toggleTopic = async (topicId) => {
     const newStatus = !completedTopics[topicId];
@@ -547,10 +564,11 @@ const CodingDashboard = () => {
       </div>
 
       {/* 3 Column Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Easy Column */}
-        <div className="flex flex-col gap-4">
+      {activeCompanyObj ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Easy Column */}
+          <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700">
             <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
             <h3 className="text-lg font-bold text-white">Easy Topics</h3>
@@ -644,8 +662,14 @@ const CodingDashboard = () => {
             </div>
           ))}
         </div>
-
       </div>
+      ) : (
+        <div className="p-8 text-center text-secondary border border-dashed border-slate-700 rounded-xl bg-slate-900/50">
+          <Building2 size={48} className="mx-auto mb-4 text-slate-600" />
+          <h2 className="text-xl font-bold text-white mb-2">No Target Companies Selected</h2>
+          <p>Please select your target companies in your profile or wait for the Admin to push companies to you.</p>
+        </div>
+      )}
 
     </div>
   );

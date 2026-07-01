@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, CheckCircle, Clock, BookOpen, PenTool, TrendingUp, PlayCircle, Plus, X, Building } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, BookOpen, PenTool, TrendingUp, PlayCircle, Plus, X, Building, Megaphone } from 'lucide-react';
 import { companiesData } from './CodingDashboard';
 import { API_BASE_URL, syncFetch } from '../assets/api';
 import { connectSocket, subscribeToEvent } from '../services/socket';
@@ -21,6 +21,8 @@ const HomeDashboard = () => {
   const [targetCompanies, setTargetCompanies] = useState([]);
   const [scheduleEvents, setScheduleEvents] = useState({});
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [announcements, setAnnouncements] = useState([]);
+  const [dynamicCompaniesData, setDynamicCompaniesData] = useState(companiesData);
   
   const dDate = new Date();
   const daysArr = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -173,6 +175,25 @@ const HomeDashboard = () => {
 
           setUpdateTrigger(p => p + 1);
         }
+        
+        // Fetch Announcements
+        const annRes = await fetch(`${API_BASE_URL}/api/announcements`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const annResult = await annRes.json();
+        if (annResult.success) {
+            setAnnouncements(annResult.data);
+        }
+
+        // Fetch Companies Data
+        const compRes = await fetch(`${API_BASE_URL}/api/data/companies`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const compResult = await compRes.json();
+        if (compResult.success && compResult.data.length > 0) {
+            setDynamicCompaniesData(compResult.data);
+        }
+
       } catch (err) {
         console.error('Error fetching sync data:', err);
       }
@@ -226,12 +247,18 @@ const HomeDashboard = () => {
         setUpdateTrigger(p => p + 1);
       }
     });
+    
+    const unsubscribeAnnouncement = subscribeToEvent('newAnnouncement', (announcement) => {
+      console.log('Real-time announcement received:', announcement);
+      setAnnouncements(prev => [announcement, ...prev].slice(0, 5));
+    });
 
     return () => {
       unsubscribeTask();
       unsubscribePlanner();
       unsubscribeProfile();
       unsubscribeProgress();
+      unsubscribeAnnouncement();
     };
   }, [todayName]);
 
@@ -284,16 +311,18 @@ const HomeDashboard = () => {
     let totalCodingTopics = 0;
     let completedCodingTopics = 0;
     const codProgress = JSON.parse(localStorage.getItem('codingProgress') || '{}');
-    companiesData.forEach(company => {
-      Object.values(company.topics).forEach(difficultyList => {
-        totalCodingTopics += difficultyList.length;
-        difficultyList.forEach(t => {
-          if (codProgress[t.id]) completedCodingTopics++;
+    dynamicCompaniesData.forEach(company => {
+      if (company.topics) {
+        Object.values(company.topics).forEach(difficultyList => {
+          totalCodingTopics += difficultyList.length;
+          difficultyList.forEach(t => {
+            if (codProgress[t.id]) completedCodingTopics++;
+          });
         });
-      });
+      }
     });
     
-    const codScore = Math.round((completedCodingTopics / totalCodingTopics) * 100) || 0;
+    const codScore = totalCodingTopics > 0 ? Math.round((completedCodingTopics / totalCodingTopics) * 100) : 0;
     setCodingScore(codScore);
 
     // 3. Readiness Score is the average + daily tasks completion bonus
@@ -365,12 +394,30 @@ const HomeDashboard = () => {
 
   return (
     <div className="page-container relative">
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-textMain mb-2">Welcome back, {userName}! 👋</h1>
-          <p className="text-secondary text-lg">Here's your SDE placement preparation plan for today.</p>
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-textMain animate-fadeInUp">
+          Welcome back, {userName}! 👋
+        </h1>
+        <p className="text-secondary mt-2 animate-fadeInUp" style={{ animationDelay: '100ms' }}>
+          Here's what you need to focus on today to reach your dream company.
+        </p>
+      </header>
+      
+      {announcements.length > 0 && (
+        <div className="mb-8 animate-fadeInUp space-y-3">
+            {announcements.map((ann, idx) => (
+                <div key={idx} className="p-4 bg-primary/10 border-l-4 border-primary rounded-r-lg flex items-start gap-4">
+                    <Megaphone className="text-primary mt-1" size={20} />
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-primary mb-1">
+                            {ann.targetType === 'all' ? 'Announcement' : 'Direct Message from Admin'}
+                        </p>
+                        <p className="text-textMain font-medium">{ann.message}</p>
+                    </div>
+                </div>
+            ))}
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Content */}

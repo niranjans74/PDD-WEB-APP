@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target, ArrowRight, ArrowLeft, ChevronRight, Briefcase, Code, Brain, Shield, Cloud, Database, Cpu, PenTool, Zap, Activity } from 'lucide-react';
 
 const evergreenJobs = [
@@ -95,8 +95,26 @@ const evergreenJobs = [
 ];
 
 const EvergreenJobs = () => {
+  const [dynamicJobs, setDynamicJobs] = useState(evergreenJobs);
   const [selectedJob, setSelectedJob] = useState(evergreenJobs[0]);
   const [mobileView, setMobileView] = useState('list'); // 'list' or 'roadmap'
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://localhost:5000/api/data/jobs`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setDynamicJobs(data.data);
+          setSelectedJob(data.data[0]);
+        }
+      } catch (err) {}
+    };
+    fetchJobs();
+  }, []);
 
   return (
     <div className="page-container">
@@ -119,8 +137,9 @@ const EvergreenJobs = () => {
         
         {/* Left Side: Job List */}
         <div className={`w-full lg:w-1/3 flex flex-col gap-3 ${mobileView === 'roadmap' ? 'hidden lg:flex' : 'flex'}`}>
-          {evergreenJobs.map((job, idx) => {
-            const Icon = job.icon;
+          {dynamicJobs.map((job, idx) => {
+            const lucideIcons = { Target, Briefcase, Code, Brain, Shield, Cloud, Database, Cpu, PenTool, Zap, Activity };
+            const Icon = (typeof job.icon === 'string' && lucideIcons[job.icon]) ? lucideIcons[job.icon] : Briefcase;
             const isActive = selectedJob.title === job.title;
             return (
               <button
@@ -154,7 +173,11 @@ const EvergreenJobs = () => {
           <div className="card border-t-4 border-slate-700" style={{ borderTopColor: selectedJob.color }}>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-16 h-16 rounded-xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${selectedJob.color}20`, color: selectedJob.color }}>
-                <selectedJob.icon size={32} />
+                {(() => {
+                  const lucideIcons = { Target, Briefcase, Code, Brain, Shield, Cloud, Database, Cpu, PenTool, Zap, Activity };
+                  const IconComp = (typeof selectedJob.icon === 'string' && lucideIcons[selectedJob.icon]) ? lucideIcons[selectedJob.icon] : (typeof selectedJob.icon === 'function' || typeof selectedJob.icon === 'object' ? selectedJob.icon : Briefcase);
+                  return <IconComp size={32} />;
+                })()}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{selectedJob.title} Roadmap</h2>

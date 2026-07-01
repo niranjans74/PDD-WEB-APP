@@ -242,33 +242,7 @@ const Login = () => {
             </div>
           )}
 
-          {authMode !== 'forgot' && (
-            <div className="flex gap-4 mt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="student"
-                  checked={role === 'student'}
-                  onChange={() => setRole('student')}
-                  className="accent-primary"
-                />
-                <span className="text-sm">Student</span>
-              </label>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="admin"
-                  checked={role === 'admin'}
-                  onChange={() => setRole('admin')}
-                  className="accent-primary"
-                />
-                <span className="text-sm">Admin</span>
-              </label>
-            </div>
-          )}
 
           <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 mt-4 flex justify-center items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
             {isLoading ? (

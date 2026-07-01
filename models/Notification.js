@@ -11,8 +11,17 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["Company", "Interview", "Reminder", "General"],
+        enum: ["Company", "Interview", "Reminder", "General", "Announcement"],
         default: "General"
+    },
+    targetType: {
+        type: String,
+        enum: ["all", "specific"],
+        default: "all"
+    },
+    targetUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     },
     createdAt: {
         type: Date,

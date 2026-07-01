@@ -57,7 +57,7 @@
 
   /* App Layout Containers */
   .app-container {
-    @apply flex h-screen w-full overflow-hidden bg-background;
+    @apply flex h-[100dvh] w-full overflow-hidden bg-background;
   }
 
   .sidebar {

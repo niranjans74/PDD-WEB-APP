@@ -63,11 +63,11 @@ const UserProfile = () => {
   const [year, setYear] = useState(() => Number(localStorage.getItem('year') || '2025'));
   const [cgpa, setCgpa] = useState(() => Number(localStorage.getItem('cgpa') || '0.0'));
 
-  const availableCompanies = [
+  const [availableCompanies, setAvailableCompanies] = useState([
     'Google', 'Microsoft', 'Amazon', 'Meta', 'Apple', 
     'TCS', 'Infosys', 'Wipro', 'Cognizant', 'Accenture',
     'Goldman Sachs', 'Morgan Stanley', 'JPMorgan', 'Bloomberg'
-  ];
+  ]);
 
   useEffect(() => {
     connectSocket();
@@ -133,6 +133,19 @@ const UserProfile = () => {
         }
       } catch (err) {
         console.error('Error fetching profile sync data:', err);
+      }
+      
+      // Fetch dynamic companies list from backend
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`${API_BASE_URL}/api/data/companies`, { headers });
+        const result = await res.json();
+        if (result.success && result.data && result.data.length > 0) {
+          setAvailableCompanies(result.data.map(c => c.name));
+        }
+      } catch (err) {
+        console.error('Error fetching companies:', err);
       }
     };
     fetchProfileData();
@@ -575,7 +588,13 @@ const UserProfile = () => {
                       type="tel" 
                       className="form-input" 
                       value={tempPhone} 
-                      onChange={(e) => setTempPhone(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                        if (val.length <= 10) setTempPhone(val);
+                      }}
+                      maxLength="10"
+                      pattern="[0-9]{10}"
+                      placeholder="10 digit mobile number"
                     />
                   </div>
                   <div className="form-group md:col-span-2">

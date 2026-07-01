@@ -1,17 +1,9 @@
 const getApiBaseUrl = () => {
   const savedUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('custom_backend_url') : null;
   if (savedUrl) {
-    const isBanned = savedUrl.includes('localhost') || 
-                     savedUrl.includes('127.0.0.1') || 
-                     savedUrl.includes('10.141.95.184') || 
-                     savedUrl.includes('10.0.2.2') ||
-                     savedUrl.includes(':5000');
-    if (isBanned) {
-      localStorage.removeItem('custom_backend_url');
-    } else {
-      return savedUrl;
-    }
+    return savedUrl;
   }
+  // Default to production Render URL
   return import.meta.env.VITE_BACKEND_URL || "https://placement-companion-backend.onrender.com";
 };
 

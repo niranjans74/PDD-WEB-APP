@@ -17,6 +17,8 @@ const Resource = require("./models/Resource");
 const Notification = require("./models/Notification");
 const Resume = require("./models/Resume");
 const Event = require("./models/Event");
+const CompanyTopic = require("./models/CompanyTopic");
+const EvergreenJob = require("./models/EvergreenJob");
 
 const app = express();
 const http = require("http");
@@ -79,6 +81,18 @@ const authenticateToken = (req, res, next) => {
     req.userId = decoded.id;
     next();
   });
+};
+
+const isAdmin = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user || user.role !== "admin") {
+            return res.status(403).json({ success: false, message: "Admin access required" });
+        }
+        next();
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 app.use(cors());
@@ -1409,6 +1423,514 @@ app.patch("/api/sync/bookmarks", authenticateToken, async (req, res) => {
         emitToUser(req.userId, "dataUpdated", { bookmarks: bookmarksMapped });
 
         res.status(200).json({ success: true, data: bookmarksMapped });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==========================================
+// NOTIFICATIONS / ANNOUNCEMENTS APIs
+// ==========================================
+
+app.get("/api/announcements", authenticateToken, async (req, res) => {
+    try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const announcements = await Notification.find({
+            type: "Announcement",
+            createdAt: { $gte: twentyFourHoursAgo },
+            $or: [
+                { targetType: "all" },
+                { targetType: "specific", targetUserId: req.userId }
+            ]
+        }).sort({ createdAt: -1 }).limit(5);
+        res.status(200).json({ success: true, data: announcements });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==========================================
+// ADMIN DASHBOARD APIs
+// ==========================================
+
+// 1. Dashboard Overview Metrics
+app.get("/api/admin/dashboard", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({ role: "student" }).select("prepProgress targetCompanies bookmarks updatedAt");
+        
+        const totalUsers = users.length;
+        const activeUsers = users.filter(u => (new Date() - new Date(u.updatedAt)) / (1000 * 60 * 60 * 24) <= 7).length; // Active in last 7 days
+        
+        let totalReadiness = 0;
+        let readinessCount = 0;
+        let totalTargetCompanies = 0;
+        let totalBookmarks = 0;
+
+        users.forEach(u => {
+            if (u.prepProgress) {
+                const vals = Object.values(u.prepProgress).filter(v => typeof v === "number");
+                if (vals.length > 0) {
+                    totalReadiness += (vals.reduce((a, b) => a + b, 0) / vals.length);
+                    readinessCount++;
+                }
+            }
+            if (Array.isArray(u.targetCompanies)) totalTargetCompanies += u.targetCompanies.length;
+            if (Array.isArray(u.bookmarks)) totalBookmarks += u.bookmarks.length;
+        });
+
+        const avgReadiness = readinessCount > 0 ? (totalReadiness / readinessCount).toFixed(1) : 0;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalUsers,
+                activeUsers,
+                avgReadiness,
+                totalTargetCompanies,
+                totalBookmarks
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 2. Get All Users (Table View)
+app.get("/api/admin/users", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({})
+            .select("name email profilePic college department year cgpa prepProgress targetCompanies role isBlocked")
+            .lean();
+
+        const formattedUsers = users.map(u => {
+            let readiness = 0;
+            if (u.prepProgress) {
+                const vals = Object.values(u.prepProgress).filter(v => typeof v === "number");
+                if (vals.length > 0) {
+                    readiness = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+                }
+            }
+            return { ...u, readiness };
+        });
+
+        res.status(200).json({ success: true, data: formattedUsers });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 3. Get Specific User Details
+app.get("/api/admin/users/:id", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select("-password").lean();
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        let readiness = 0;
+        if (user.prepProgress) {
+            const vals = Object.values(user.prepProgress).filter(v => typeof v === "number");
+            if (vals.length > 0) {
+                readiness = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+            }
+        }
+
+        res.status(200).json({ success: true, data: { ...user, readiness } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 4. Company Analytics
+app.get("/api/admin/analytics/companies", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({ targetCompanies: { $exists: true, $not: { $size: 0 } } }).select("targetCompanies");
+        
+        const companyCounts = {};
+        users.forEach(u => {
+            if (Array.isArray(u.targetCompanies)) {
+                u.targetCompanies.forEach(company => {
+                    let companyName = typeof company === 'string' ? company : company?.name;
+                    if (companyName) {
+                        companyCounts[companyName] = (companyCounts[companyName] || 0) + 1;
+                    }
+                });
+            }
+        });
+
+        const sortedCompanies = Object.entries(companyCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+
+        res.status(200).json({ success: true, data: sortedCompanies });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 5. Readiness Analytics
+app.get("/api/admin/analytics/readiness", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({ role: "student" }).select("prepProgress");
+        
+        const distribution = {
+            "0-25%": 0,
+            "26-50%": 0,
+            "51-75%": 0,
+            "76-100%": 0
+        };
+
+        users.forEach(u => {
+            let readiness = 0;
+            if (u.prepProgress) {
+                const vals = Object.values(u.prepProgress).filter(v => typeof v === "number");
+                if (vals.length > 0) {
+                    readiness = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+                }
+            }
+            if (readiness <= 25) distribution["0-25%"]++;
+            else if (readiness <= 50) distribution["26-50%"]++;
+            else if (readiness <= 75) distribution["51-75%"]++;
+            else distribution["76-100%"]++;
+        });
+
+        res.status(200).json({ success: true, data: distribution });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 6. Bookmarks Analytics
+app.get("/api/admin/analytics/bookmarks", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({ role: "student", bookmarks: { $exists: true, $not: { $size: 0 } } }).select("bookmarks");
+        
+        const bookmarkCounts = {};
+        users.forEach(u => {
+            if (Array.isArray(u.bookmarks)) {
+                u.bookmarks.forEach(b => {
+                    if (b.title) {
+                        bookmarkCounts[b.title] = (bookmarkCounts[b.title] || 0) + 1;
+                    }
+                });
+            }
+        });
+
+        const sortedBookmarks = Object.entries(bookmarkCounts)
+            .map(([title, count]) => ({ title, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10); // Top 10
+
+        res.status(200).json({ success: true, data: sortedBookmarks });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 7. Activity Monitor (Simulated Timeline)
+app.get("/api/admin/activity", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const recentUsers = await User.find({ role: "student" })
+            .sort({ updatedAt: -1 })
+            .limit(100)
+            .select("name updatedAt bookmarks targetCompanies createdAt");
+        
+        const activities = recentUsers.map(u => {
+            const isNew = (new Date() - new Date(u.createdAt)) < 1000 * 60 * 60 * 24; // Created today
+            const action = isNew ? "Registered on Platform" : "Updated Profile/Activity";
+            return {
+                id: u._id,
+                user: u.name,
+                action: action,
+                timestamp: u.updatedAt
+            };
+        });
+
+        res.status(200).json({ success: true, data: activities });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 8. Toggle Block Status
+app.patch("/api/admin/users/:id/block", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        user.isBlocked = !user.isBlocked;
+        await user.save();
+
+        res.status(200).json({ success: true, isBlocked: user.isBlocked });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 9. Change Role
+app.patch("/api/admin/users/:id/role", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { role } = req.body;
+        if (!["student", "admin"].includes(role)) return res.status(400).json({ success: false, message: "Invalid role" });
+
+        const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        res.status(200).json({ success: true, role: user.role });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// 10. Announcements API (Admin)
+app.get("/api/admin/announcements", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const announcements = await Notification.find({ 
+            type: "Announcement",
+            createdAt: { $gte: twentyFourHoursAgo }
+        })
+            .populate("targetUserId", "name email")
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: announcements });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.post("/api/admin/announcements", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { message, targetType, targetUserId } = req.body;
+        if (!message || message.length > 120) {
+            return res.status(400).json({ success: false, message: "Message is required and must be under 120 characters" });
+        }
+
+        const announcement = new Notification({
+            title: "Admin Announcement",
+            message,
+            type: "Announcement",
+            targetType: targetType || "all",
+            targetUserId: targetType === "specific" ? targetUserId : undefined
+        });
+        
+        await announcement.save();
+        
+        // Push notification in real-time if applicable
+        if (targetType === "specific" && targetUserId) {
+            emitToUser(targetUserId, "newAnnouncement", announcement);
+        } else {
+            // For 'all', we might broadcast, but polling or refresh is safer right now
+        }
+
+        res.status(201).json({ success: true, data: announcement });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==========================================
+// DATA MANAGEMENT APIs
+// ==========================================
+
+// Public GET routes for students
+app.get("/api/data/companies", authenticateToken, async (req, res) => {
+    try {
+        const companies = await CompanyTopic.find({}).lean();
+        res.status(200).json({ success: true, data: companies });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.get("/api/data/jobs", authenticateToken, async (req, res) => {
+    try {
+        const jobs = await EvergreenJob.find({}).lean();
+        res.status(200).json({ success: true, data: jobs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin Data Routes
+app.post("/api/admin/data/companies", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { name, easyTopics, mediumTopics, hardTopics } = req.body;
+        
+        const parseTopics = (str, prefix) => {
+            if (!str) return [];
+            return str.split(',').map((t, idx) => ({
+                id: `${prefix}-${Date.now()}-${idx}`,
+                name: t.trim()
+            })).filter(t => t.name);
+        };
+
+        const newCompany = new CompanyTopic({
+            name,
+            domain: `${name.toLowerCase().replace(/\s+/g, '')}.com`,
+            topics: {
+                Easy: parseTopics(easyTopics, 'e'),
+                Medium: parseTopics(mediumTopics, 'm'),
+                Hard: parseTopics(hardTopics, 'h')
+            }
+        });
+
+        await newCompany.save();
+        
+        // Auto-Announcement
+        const newAnnouncement = new Notification({
+            title: "New Company Added",
+            message: `New company added by admin: ${name}`,
+            type: "Announcement",
+            targetType: "all",
+            senderId: req.userId
+        });
+        await newAnnouncement.save();
+        io.emit("newAnnouncement", newAnnouncement);
+
+        res.status(201).json({ success: true, data: newCompany });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.put("/api/admin/data/companies/:id", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await CompanyTopic.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.status(200).json({ success: true, data: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.delete("/api/admin/data/companies/:id", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const company = await CompanyTopic.findByIdAndDelete(req.params.id);
+        if (company) {
+            await Notification.deleteMany({
+                message: `New company added by admin: ${company.name}`,
+                type: "Announcement"
+            });
+        }
+        res.status(200).json({ success: true, message: "Company deleted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.post("/api/admin/data/jobs", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const icons = ["Briefcase", "Code", "Brain", "Shield", "Cloud", "Database", "Cpu", "Zap", "Activity", "Target"];
+        const colors = ["#8b5cf6", "#3b82f6", "#ef4444", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1", "#eab308", "#f43f5e"];
+        
+        const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const newJob = new EvergreenJob({
+            ...req.body,
+            icon: randomIcon,
+            color: randomColor
+        });
+        await newJob.save();
+
+        // Auto-Announcement
+        const newAnnouncement = new Notification({
+            title: "New Career Roadmap Added",
+            message: `New career roadmap added by admin: ${newJob.title}`,
+            type: "Announcement",
+            targetType: "all",
+            senderId: req.userId
+        });
+        await newAnnouncement.save();
+        io.emit("newAnnouncement", newAnnouncement);
+
+        res.status(201).json({ success: true, data: newJob });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.put("/api/admin/data/jobs/:id", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await EvergreenJob.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.status(200).json({ success: true, data: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.delete("/api/admin/data/jobs/:id", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const job = await EvergreenJob.findByIdAndDelete(req.params.id);
+        if (job) {
+            await Notification.deleteMany({
+                message: `New career roadmap added by admin: ${job.title}`,
+                type: "Announcement"
+            });
+        }
+        res.status(200).json({ success: true, message: "Job deleted" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Push Company to Student(s)
+app.post("/api/admin/push-company", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { companyName, targetType, targetUserId } = req.body;
+        
+        if (!companyName) {
+            return res.status(400).json({ success: false, message: "Company name is required" });
+        }
+
+        if (targetType === "all") {
+            await User.updateMany({ role: "student" }, { $addToSet: { targetCompanies: companyName } });
+        } else if (targetType === "specific" && targetUserId) {
+            const user = await User.findById(targetUserId);
+            if (user) {
+                const targetComps = user.targetCompanies || [];
+                if (!targetComps.includes(companyName)) {
+                    targetComps.push(companyName);
+                    user.targetCompanies = targetComps;
+                    await user.save();
+                    emitToUser(user._id, "targetCompaniesUpdated", targetComps);
+                }
+            }
+        }
+
+        res.status(200).json({ success: true, message: "Company pushed successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Push Job to Student(s) (Assuming we store pushed jobs in user.targetJobs, or just send a notification)
+// Since we don't have user.targetJobs in the original schema, we will send an announcement/notification.
+app.post("/api/admin/push-job", authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { jobId, targetType, targetUserId } = req.body;
+        const job = await EvergreenJob.findById(jobId);
+        
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+
+        const message = `Check out the new career roadmap for: ${job.title}!`;
+        const newAnnouncement = new Notification({
+            title: "New Career Roadmap",
+            message: message,
+            type: "system",
+            target: targetType,
+            targetUserId: targetType === "specific" ? targetUserId : null,
+            senderId: req.userId
+        });
+        
+        await newAnnouncement.save();
+
+        if (targetType === "all") {
+            io.emit("newAnnouncement", newAnnouncement);
+        } else if (targetType === "specific" && targetUserId) {
+            emitToUser(targetUserId, "newAnnouncement", newAnnouncement);
+        }
+
+        res.status(200).json({ success: true, message: "Job pushed successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
